@@ -1,10 +1,6 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI as string;
-
-if (!MONGODB_URI) {
-  throw new Error("Please define MONGODB_URI in .env");
-}
+// Moved validation inside connectDB to prevent Vercel build-time execution crash
 
 // Cached connection across hot reloads in dev
 let cached = (global as any).mongoose;
@@ -14,6 +10,12 @@ if (!cached) {
 }
 
 export async function connectDB() {
+  const MONGODB_URI = process.env.MONGODB_URI as string;
+
+  if (!MONGODB_URI) {
+    throw new Error("Please define MONGODB_URI in .env");
+  }
+
   if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
