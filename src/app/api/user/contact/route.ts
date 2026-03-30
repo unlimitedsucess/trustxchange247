@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Contact from "@/models/Contact";
-import nodemailer from "nodemailer";
+import { transporter } from "@/lib/email";
 
 const ALLOWED_ORIGINS = [
   "http://localhost:3000",
@@ -56,14 +56,7 @@ export async function POST(req: Request) {
       message: message.trim(),
     });
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS,
-      },
-    });
-
+    // Route payload explicitly through Unified ZeptoMail Transporter
     await transporter.sendMail({
       from: `"${name}" <${email}>`,
       to: process.env.ADMIN_EMAIL,
