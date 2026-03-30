@@ -4,7 +4,7 @@ import User from "@/models/user";
 
 const ALLOWED_ORIGINS = [
   "http://localhost:3000",
-  "https://trustxchange247-2b4b.vercel.app",
+  "https://trustxchange247.vercel.app",
 ];
 
 function getCorsHeaders(origin: string | null): Record<string, string> {
