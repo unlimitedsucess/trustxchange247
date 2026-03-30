@@ -45,19 +45,23 @@ export default function RootLayout({
         <Analytics />
         
         {/* Tawk.to Live Chat Script */}
-        <Script id="tawk-to" strategy="lazyOnload">
-          {`
-            var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-            (function(){
-            var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-            s1.async=true;
-            s1.src='https://embed.tawk.to/65d1d6a68d261e1b5f621980/1hn01hjeb'; // Using a demo/generic tawk property until user configures theirs
-            s1.charset='UTF-8';
-            s1.setAttribute('crossorigin','*');
-            s0.parentNode.insertBefore(s1,s0);
-            })();
-          `}
-        </Script>
+        <Script 
+          id="tawk-to" 
+          strategy="lazyOnload"
+          dangerouslySetInnerHTML={{
+            __html: `
+              var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+              (function(){
+              var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+              s1.async=true;
+              s1.src='https://embed.tawk.to/65d1d6a68d261e1b5f621980/1hn01hjeb';
+              s1.charset='UTF-8';
+              s1.setAttribute('crossorigin','*');
+              s0.parentNode.insertBefore(s1,s0);
+              })();
+            `
+          }}
+        />
       </body>
     </html>
   )
