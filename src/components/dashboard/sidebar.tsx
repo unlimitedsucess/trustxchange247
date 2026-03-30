@@ -5,13 +5,16 @@ import { usePathname } from "next/navigation"
 import { LayoutDashboard, TrendingUp, LogOut, BarChart, X, CreditCard, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DarkModeToggle } from "../layout/dark-mode-toggle"
-
+import { useSelector } from "react-redux"
+import { RootState } from "@/store"
+import { useEffect, useState } from "react"
 
 interface DashboardSidebarProps {
   onClose?: () => void
+  user?: { name: string; email: string }
 }
 
-export function DashboardSidebar({ onClose }: DashboardSidebarProps) {
+export function DashboardSidebar({ onClose, user: propUser }: DashboardSidebarProps) {
   const pathname = usePathname()
 
   const menuItems = [
@@ -22,6 +25,31 @@ export function DashboardSidebar({ onClose }: DashboardSidebarProps) {
   ]
 
   const isActive = (href: string) => pathname === href
+
+  const token = useSelector((state: RootState) => state.token.token)
+  const [localUser, setLocalUser] = useState<{name: string, email: string} | null>(null)
+
+  useEffect(() => {
+    if (propUser) {
+      setLocalUser(propUser)
+    } else if (token) {
+      try {
+        // Decode the JWT standard Payload (Base64Url -> Base64 -> String -> Object)
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        const payload = JSON.parse(jsonPayload);
+        if (payload.fullName) {
+          setLocalUser({ name: payload.fullName, email: payload.email });
+        }
+      } catch (e) {
+        console.error("Token decoding failed", e)
+      }
+    }
+  }, [token, propUser])
 
   return (
     <div className="flex flex-col h-full p-6">
@@ -63,12 +91,18 @@ export function DashboardSidebar({ onClose }: DashboardSidebarProps) {
         })}
       </nav>
 
-      {/* User Info */}
       <div className="border-t border-sidebar-border pt-6">
         <div className="mb-4">
           <p className="text-xs text-sidebar-foreground/70 uppercase tracking-wide mb-1">Account</p>
-          <p className="font-semibold text-sm truncate">John Doe</p>
-          <p className="text-xs text-sidebar-foreground/70 truncate">john@example.com</p>
+          <div className="flex items-center gap-3">
+             <div className="h-10 w-10 shrink-0 rounded-full bg-primary/20 flex flex-col items-center justify-center text-primary font-bold">
+               {localUser?.name ? localUser.name.substring(0,2).toUpperCase() : "??"}
+             </div>
+             <div className="flex flex-col overflow-hidden">
+               <p className="font-semibold text-sm truncate">{localUser?.name || "Loading..."}</p>
+               <p className="text-xs text-sidebar-foreground/70 truncate">{localUser?.email || "..."}</p>
+             </div>
+          </div>
         </div>
 
         <Button variant="outline" className="w-full gap-2 bg-transparent" size="sm">

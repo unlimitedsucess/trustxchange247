@@ -23,6 +23,7 @@ export default function DashboardPage() {
     withdrawableBalance: number;
     recentInvestments: any[];
     recentWithdrawals: any[];
+    user?: { name: string; email: string };
   }>({
     totalInvested: 0,
     totalProfit: 0,
@@ -76,7 +77,7 @@ export default function DashboardPage() {
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
-        <DashboardSidebar onClose={() => setSidebarOpen(false)} />
+        <DashboardSidebar onClose={() => setSidebarOpen(false)} user={stats.user} />
       </aside>
 
       {/* Main Content */}

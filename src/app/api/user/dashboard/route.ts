@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Deposit from "@/models/deposit";
 import Withdrawal from "@/models/withdrawal";
+import User from "@/models/user";
 import { headers } from "next/headers";
 import jwt from "jsonwebtoken";
 
@@ -19,9 +20,10 @@ export async function GET(req: Request) {
 
     await connectDB();
 
-    const [deposits, withdrawals] = await Promise.all([
+    const [deposits, withdrawals, userObj] = await Promise.all([
       Deposit.find({ user: userId }),
-      Withdrawal.find({ user: userId })
+      Withdrawal.find({ user: userId }),
+      User.findById(userId).select("fullName email")
     ]);
 
     let totalInvested = 0;
@@ -79,7 +81,11 @@ export async function GET(req: Request) {
       activeInvestments,
       withdrawableBalance: Math.max(0, withdrawableBalance), // prevent negative UI display
       recentInvestments,
-      recentWithdrawals
+      recentWithdrawals,
+      user: {
+        name: userObj?.fullName || "Investor",
+        email: userObj?.email || "...",
+      }
     };
 
     return NextResponse.json({ success: true, data: stats }, { status: 200 });
