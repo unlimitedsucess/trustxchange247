@@ -62,7 +62,9 @@ export async function POST(req: Request) {
     }
 
     const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) {
+    
+    // Check if user exists AND if they actually have a password set (prevents incomplete registration crashes)
+    if (!user || !user.password) {
       return NextResponse.json(
         { message: "Invalid email or password" },
         { status: 401, headers: getCorsHeaders(origin) }
