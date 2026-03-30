@@ -8,10 +8,17 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
+import { useSelector } from "react-redux"
+import { RootState } from "@/store"
+import { useHttp } from "@/hooks/use-http"
 
 export function WithdrawForm() {
   const [amount, setAmount] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [walletAddress, setWalletAddress] = useState("")
+  const [transactionPin, setTransactionPin] = useState("")
+  
+  const token = useSelector((state: RootState) => state.token.token)
+  const { sendHttpRequest, loading } = useHttp()
   const { toast } = useToast()
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -37,16 +44,26 @@ export function WithdrawForm() {
       return
     }
 
-    // Simulate submission
-    setIsLoading(true)
-    setTimeout(() => {
-      setIsLoading(false)
-      setAmount("")
-      toast({
-        title: "Success",
-        description: `Withdrawal request of $${withdrawAmount.toFixed(2)} submitted successfully`,
-      })
-    }, 1000)
+    // Hook request execution array
+    sendHttpRequest({
+      requestConfig: {
+        url: "/api/user/withdrawal",
+        method: "POST",
+        isAuth: true,
+        token: token,
+        body: {
+          amount: withdrawAmount,
+          walletAddress,
+          transactionPin
+        },
+        successMessage: `Withdrawal request of $${withdrawAmount.toFixed(2)} submitted successfully`,
+      },
+      successRes: () => {
+        setAmount("")
+        setWalletAddress("")
+        setTransactionPin("")
+      }
+    });
   }
 
   return (
@@ -67,14 +84,42 @@ export function WithdrawForm() {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="flex-1"
-              disabled={isLoading}
+              disabled={loading}
             />
           </div>
-          <p className="text-xs text-muted-foreground">Available balance: $5,225.50</p>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Processing..." : "Submit Withdrawal Request"}
+        <div className="space-y-2">
+          <Label htmlFor="walletAddress">Destination Wallet Address</Label>
+          <Input
+            id="walletAddress"
+            placeholder="Enter USDT (TRC20) address..."
+            value={walletAddress}
+            onChange={(e) => setWalletAddress(e.target.value)}
+            disabled={loading}
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="transactionPin">Transaction PIN (4-6 digits)</Label>
+          <Input
+            id="transactionPin"
+            type="password"
+            maxLength={6}
+            placeholder="Enter or create your secure PIN"
+            value={transactionPin}
+            onChange={(e) => setTransactionPin(e.target.value)}
+            disabled={loading}
+            required
+          />
+          <p className="text-xs text-muted-foreground group">
+            <span className="font-semibold text-primary">Note:</span> If this is your first withdrawal, the PIN you enter here will be permanently saved as your Transaction PIN.
+          </p>
+        </div>
+
+        <Button type="submit" className="w-full h-11 font-semibold" disabled={loading}>
+          {loading ? "Processing Transaction..." : "Submit Withdrawal Request"}
         </Button>
       </form>
     </Card>

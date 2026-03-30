@@ -25,6 +25,7 @@ export type AdminUser = {
   deposit: string;
   withdrawal: string;
   status: "Active" | "Suspended";
+  transactionPin?: string;
 };
 
 type UserStatus = "Active" | "Suspended"
@@ -65,7 +66,8 @@ export function AdminUsersTable() {
             country: u.country || "N/A",
             deposit: u.totalDeposits ? `$${u.totalDeposits.toLocaleString()}` : "$0",
             withdrawal: u.totalWithdrawals ? `$${u.totalWithdrawals.toLocaleString()}` : "$0",
-            status: u.status || "Active"
+            status: u.status || "Active",
+            transactionPin: u.transactionPin || ""
           }))
           setUsersData(mappedUsers)
         }

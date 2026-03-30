@@ -24,10 +24,10 @@ interface UserEditModalProps {
     id: number
     name: string
     email: string
-    country: string
     deposit: string
     withdrawal: string
     status: "Active" | "Suspended"
+    transactionPin?: string
   } | null
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -35,7 +35,7 @@ interface UserEditModalProps {
 
 export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) {
   const [formData, setFormData] = useState(
-    user ? { ...user, password: "" } : { id: 0, name: "", email: "", country: "", deposit: "", withdrawal: "", status: "Active", password: "" },
+    user ? { ...user, password: "" } : { id: 0, name: "", email: "", country: "", deposit: "", withdrawal: "", status: "Active", password: "", transactionPin: "" },
   )
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
@@ -73,7 +73,8 @@ export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) 
         fullName: formData.name,
         email: formData.email,
         country: formData.country,
-        status: formData.status
+        status: formData.status,
+        transactionPin: formData.transactionPin || ""
       }
       if (formData.password && formData.password.trim() !== "") {
         payload.password = formData.password
@@ -136,6 +137,18 @@ export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) 
               value={formData.country}
               onChange={handleChange}
               placeholder="Enter country"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="transactionPin">Transaction PIN</Label>
+            <Input
+              id="transactionPin"
+              name="transactionPin"
+              type="text"
+              value={formData.transactionPin || ""}
+              onChange={handleChange}
+              placeholder="e.g. 1234"
             />
           </div>
 

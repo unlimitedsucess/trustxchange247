@@ -9,6 +9,7 @@ export interface IUser {
   isEmailVerified: boolean;
   verificationToken?: string;
   verificationExpires?: Date;
+  transactionPin?: string;
   createdAt?: Date;
 }
 
@@ -22,6 +23,7 @@ const userSchema = new Schema<IUser>({
   isEmailVerified: { type: Boolean, default: false },
   verificationToken: { type: String },
   verificationExpires: { type: Date },
+  transactionPin: { type: String },
   createdAt: { type: Date, default: Date.now },
 });
 
