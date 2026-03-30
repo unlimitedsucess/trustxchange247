@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 
 const ALLOWED_ORIGINS = [
   "http://localhost:3000",
-  "https://yourdomain.com",
+  "https://trustxchange247-2b4b.vercel.app",
 ];
 
 function getCorsHeaders(origin: string | null): Record<string, string> {

@@ -6,7 +6,7 @@ import User from "@/models/user";
 
 const ALLOWED_ORIGINS = [
   "http://localhost:3000",
-  "https://yourdomain.com",
+  "https://trustxchange247-2b4b.vercel.app",
   "https://www.yourdomain.com",
 ];
 
