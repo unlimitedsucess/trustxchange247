@@ -1,16 +1,18 @@
 import nodemailer from "nodemailer";
 
 export const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.zeptomail.com",
+  port: 587,
+  secure: false, // TLS
   auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS, // App password
+    user: process.env.ZEPTOMAIL_USER || "email", // Use "email", "emailapikey" or your specific Zeptomail username
+    pass: process.env.ZEPTOMAIL_PASS,
   },
 });
 
 export const sendVerificationEmail = async (email: string, code: string) => {
   await transporter.sendMail({
-    from: `"TrustXchange247" <${process.env.GMAIL_USER}>`,
+    from: `"Trust Xchange" <support@trustxchange247.com>`,
     to: email,
     subject: "Your Verification Code - TrustXchange247",
     html: `
@@ -70,7 +72,7 @@ export const sendVerificationEmail = async (email: string, code: string) => {
 
 export const sendDepositApprovalEmail = async (email: string, amount: number, planName: string) => {
   await transporter.sendMail({
-    from: `"TrustXchange247" <${process.env.GMAIL_USER}>`,
+    from: `"Trust Xchange" <support@trustxchange247.com>`,
     to: email,
     subject: "Deposit Approved - TrustXchange247",
     html: `
@@ -141,7 +143,7 @@ export const sendDepositApprovalEmail = async (email: string, amount: number, pl
 
 export const sendWithdrawalApprovalEmail = async (email: string, amount: number, wallet: string) => {
   await transporter.sendMail({
-    from: `"TrustXchange247" <${process.env.GMAIL_USER}>`,
+    from: `"Trust Xchange" <support@trustxchange247.com>`,
     to: email,
     subject: "Withdrawal Approved & Sent - TrustXchange247",
     html: `
