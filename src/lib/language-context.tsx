@@ -525,6 +525,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const setLanguage = (lang: LanguageCode) => {
     setLanguageState(lang)
     localStorage.setItem("language", lang)
+    
+    // Wire Custom UI Dropdown directly to Global Google Translate Engine
+    const host = window.location.hostname
+    document.cookie = `googtrans=/en/${lang}; path=/; domain=${host}`
+    document.cookie = `googtrans=/en/${lang}; path=/`
+    
+    // Force a semantic reload to apply deep-DOM language processing globally
+    window.location.reload()
   }
 
   const t = (key: string): string => {
