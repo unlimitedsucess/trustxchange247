@@ -49,7 +49,7 @@ export function Footer() {
             <h4 className="font-semibold mb-4 text-sm">Support</h4>
             <ul className="space-y-2 text-sm">
               <li className="text-muted-foreground">Email: support@TrustXchange247.com</li>
-              <li className="text-muted-foreground">Phone: +1 (763) 353-7173</li>
+              <li className="text-muted-foreground">Phone: +1 (702) 319-7242</li>
               <li className="text-muted-foreground">Office: 123 Finance St, NYC, NY 10001</li>
             </ul>
           </div>
@@ -64,7 +64,7 @@ export function Footer() {
                 </div>
                 <span>Telegram</span>
               </a>
-              <a href="https://wa.me/17633537173" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-[#25D366] transition group">
+              <a href="https://wa.me/17023197242" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-[#25D366] transition group">
                 <div className="w-8 h-8 rounded-full border border-border flex items-center justify-center group-hover:border-[#25D366] group-hover:bg-[#25D366]/10 transition">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.498 14.382c-.301-.15-1.767-.867-2.04-.966-.273-.101-.473-.15-.673.15-.197.295-.771.964-.944 1.162-.175.195-.349.21-.646.062-.303-.15-1.267-.464-2.411-1.485-.888-.795-1.484-1.778-1.66-2.07-.174-.296-.019-.459.13-.607.136-.134.3-.347.45-.521.152-.172.2-.296.302-.494.098-.192.046-.363-.028-.51-.075-.15-.672-1.62-.922-2.206-.24-.584-.487-.51-.672-.51-.172 0-.372-.008-.57-.008-.201 0-.523.076-.798.375-.274.296-1.049 1.025-1.049 2.497s1.074 2.89 1.223 3.09c.149.196 2.105 3.21 5.1 4.505.713.308 1.268.492 1.701.629.715.227 1.365.195 1.886.118.577-.085 1.767-.722 2.016-1.426.248-.702.248-1.306.173-1.426-.073-.122-.272-.196-.574-.352zm-5.434 7.284h-.002c-1.49-.001-2.95-.4-4.23-1.155l-.304-.18-3.147.826.84-3.071-.197-.314a10.224 10.224 0 01-1.572-5.464c.003-5.65 4.603-10.245 10.256-10.245 2.738.002 5.312 1.07 7.247 3.007 1.936 1.938 3.003 4.512 3 7.252-.005 5.648-4.608 10.244-10.261 10.244zm8.411-16.711C18.225 2.71 15.244 1.5 12.062 1.5 6.273 1.5 1.558 6.21 1.55 12c-.004 1.85.484 3.655 1.41 5.248L1.5 24l6.905-1.812a11.956 11.956 0 005.657 1.416h.005c5.787 0 10.503-4.71 10.51-10.5.003-2.805-1.088-5.441-3.07-7.424z"/></svg>
                 </div>
