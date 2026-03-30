@@ -67,7 +67,7 @@ export function Header() {
             <div id="google_translate_element" className="hidden sm:block "></div>
 
             {/* Language Selector */}
-            <div className="hidden sm:flex">
+            <div className="flex">
               <LanguageSelector />
             </div>
 
@@ -116,10 +116,6 @@ export function Header() {
                   <Link href="/register" onClick={() => setMobileMenuOpen(false)}>{t("header.register")}</Link>
                 </Button>
                 
-                {/* Mobile Language Selector */}
-                <div className="w-full mt-2 flex justify-center border-t border-border pt-4">
-                  <LanguageSelector />
-                </div>
               </div>
             </nav>
           </div>
