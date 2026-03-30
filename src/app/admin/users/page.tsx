@@ -1,0 +1,49 @@
+"use client"
+
+import { useState } from "react"
+import { AdminSidebar } from "@/components/admin/sidebar"
+import { Menu } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { AdminUsersTable } from "@/components/admin/users-table"
+
+export default function AdminUsersPage() {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <div className="flex-1 flex overflow-hidden">
+        {/* Mobile Sidebar Overlay */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
+        )}
+
+        {/* Sidebar */}
+        <aside
+          className={`fixed md:relative w-64 h-screen bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-transform duration-300 z-50 md:z-auto ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          }`}
+        >
+          <AdminSidebar onClose={() => setSidebarOpen(false)} />
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto">
+          <div className="md:hidden flex items-center justify-between p-4 border-b border-border bg-background sticky top-0 z-30">
+            <span className="font-semibold">Users Management</span>
+            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} className="h-9 w-9">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </div>
+
+          <div className="p-4 sm:p-8 bg-background">
+            <div className="mb-8 text-sm text-muted-foreground">
+              <span className="text-foreground font-semibold">Admin</span> / Users
+            </div>
+
+            <AdminUsersTable />
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}

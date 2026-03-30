@@ -1,0 +1,323 @@
+// Mock cryptocurrency data
+export const cryptoData = [
+  { id: 1, name: "Bitcoin", symbol: "BTC", price: 45230.5, change24h: 2.45, marketCap: 890000000000, icon: "₿" },
+  { id: 2, name: "Ethereum", symbol: "ETH", price: 2810.3, change24h: 1.85, marketCap: 337000000000, icon: "Ξ" },
+  { id: 3, name: "Cardano", symbol: "ADA", price: 0.98, change24h: -0.45, marketCap: 35000000000, icon: "◆" },
+  { id: 4, name: "Solana", symbol: "SOL", price: 189.45, change24h: 3.2, marketCap: 60000000000, icon: "◎" },
+  { id: 5, name: "Ripple", symbol: "XRP", price: 2.35, change24h: 1.1, marketCap: 125000000000, icon: "ℜ" },
+  { id: 6, name: "Polkadot", symbol: "DOT", price: 38.9, change24h: -1.25, marketCap: 50000000000, icon: "◬" },
+  { id: 7, name: "Litecoin", symbol: "LTC", price: 185.6, change24h: 0.85, marketCap: 28000000000, icon: "Ł" },
+  { id: 8, name: "Chainlink", symbol: "LINK", price: 28.4, change24h: 2.15, marketCap: 13000000000, icon: "🔗" },
+  { id: 9, name: "Polygon", symbol: "MATIC", price: 1.05, change24h: 1.5, marketCap: 11000000000, icon: "◇" },
+  { id: 10, name: "Uniswap", symbol: "UNI", price: 18.75, change24h: -0.65, marketCap: 7000000000, icon: "⬡" },
+  { id: 11, name: "Dogecoin", symbol: "DOGE", price: 0.38, change24h: 4.25, marketCap: 55000000000, icon: "🐕" },
+  { id: 12, name: "Bitcoin Cash", symbol: "BCH", price: 425.8, change24h: -1.85, marketCap: 8300000000, icon: "฿" },
+  { id: 13, name: "Stellar", symbol: "XLM", price: 0.42, change24h: 0.95, marketCap: 6500000000, icon: "✱" },
+  { id: 14, name: "Cosmos", symbol: "ATOM", price: 12.8, change24h: 2.35, marketCap: 5100000000, icon: "◉" },
+  { id: 15, name: "Monero", symbol: "XMR", price: 165.2, change24h: 1.75, marketCap: 2900000000, icon: "◊" },
+  { id: 16, name: "Avalanche", symbol: "AVAX", price: 55.3, change24h: 3.1, marketCap: 2100000000, icon: "⬢" },
+  { id: 17, name: "Filecoin", symbol: "FIL", price: 18.95, change24h: -2.05, marketCap: 1600000000, icon: "📦" },
+  { id: 18, name: "VeChain", symbol: "VET", price: 0.089, change24h: 1.35, marketCap: 1200000000, icon: "⚡" },
+  { id: 19, name: "Theta Token", symbol: "THETA", price: 3.45, change24h: 0.55, marketCap: 3450000000, icon: "θ" },
+  { id: 20, name: "TRON", symbol: "TRX", price: 0.28, change24h: 2.85, marketCap: 28000000000, icon: "◁" },
+]
+
+// Investment plans
+export const investmentPlans = [
+  {
+    id: 1,
+    name: "Basic Plan",
+    minInvestment: 100,
+    maxInvestment: 5000,
+    dailyROI: 0.5,
+    monthlyROI: 12,
+    duration: "30 days",
+    description: "Perfect for beginners",
+    features: ["Daily returns", "Low minimum", "Quick withdrawal"],
+  },
+  {
+    id: 2,
+    name: "Standard Plan",
+    minInvestment: 5000,
+    maxInvestment: 50000,
+    dailyROI: 0.75,
+    monthlyROI: 18,
+    duration: "60 days",
+    description: "For experienced investors",
+    features: ["Higher returns", "Flexible terms", "Priority support"],
+  },
+  {
+    id: 3,
+    name: "Long-Term Investment",
+    minInvestment: 50000,
+    maxInvestment: 500000,
+    dailyROI: 1.0,
+    monthlyROI: 24,
+    duration: "180 days",
+    description: "Maximum growth potential",
+    features: ["Premium returns", "Exclusive access", "VIP support"],
+  },
+]
+
+// Chart data for trading
+export const chartData = [
+  { date: "Jan 1", BTC: 42000, ETH: 2400, volume: 2400 },
+  { date: "Jan 5", BTC: 43200, ETH: 2410, volume: 2210 },
+  { date: "Jan 10", BTC: 42800, ETH: 2290, volume: 2290 },
+  { date: "Jan 15", BTC: 44100, ETH: 2390, volume: 2000 },
+  { date: "Jan 20", BTC: 43500, ETH: 2981, volume: 2181 },
+  { date: "Jan 25", BTC: 45200, ETH: 2500, volume: 2500 },
+  { date: "Feb 1", BTC: 45800, ETH: 2810, volume: 2100 },
+]
+
+// Investment data for user dashboard
+export const userInvestments = [
+  {
+    id: 1,
+    plan: "Basic Plan",
+    investedAmount: 1000,
+    startDate: "2024-01-15",
+    endDate: "2024-02-14",
+    roi: 12,
+    currentValue: 1120,
+    status: "Active",
+  },
+  {
+    id: 2,
+    plan: "Standard Plan",
+    investedAmount: 10000,
+    startDate: "2024-01-01",
+    endDate: "2024-03-01",
+    roi: 18,
+    currentValue: 11800,
+    status: "Active",
+  },
+  {
+    id: 3,
+    plan: "Basic Plan",
+    investedAmount: 2500,
+    startDate: "2023-12-15",
+    endDate: "2024-01-14",
+    roi: 12,
+    currentValue: 2800,
+    status: "Completed",
+  },
+  {
+    id: 4,
+    plan: "Long-Term Investment",
+    investedAmount: 50000,
+    startDate: "2024-01-10",
+    endDate: "2024-07-10",
+    roi: 24,
+    currentValue: 55200,
+    status: "Active",
+  },
+]
+
+// Withdrawal request data
+export const withdrawalRequests = [
+  {
+    id: 1,
+    amount: 500,
+    walletAddress: "1A1z7agoat4VFjqyvzpA6KvQZGpVxsqKuh",
+    dateRequested: "2024-01-20",
+    status: "Approved",
+  },
+  {
+    id: 2,
+    amount: 1500,
+    walletAddress: "3J98t1WpEZ73CNmYviecrnyiWrnqRhWNLy",
+    dateRequested: "2024-01-22",
+    status: "Pending",
+  },
+  {
+    id: 3,
+    amount: 800,
+    walletAddress: "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq",
+    dateRequested: "2024-01-18",
+    status: "Rejected",
+  },
+  {
+    id: 4,
+    amount: 2000,
+    walletAddress: "1A1z7agoat4VFjqyvzpA6KvQZGpVxsqKuh",
+    dateRequested: "2024-01-23",
+    status: "Pending",
+  },
+]
+
+// Admin withdrawal requests
+export const adminWithdrawalRequests = [
+  {
+    id: 1,
+    userName: "John Doe",
+    amount: 500,
+    walletAddress: "1A1z7agoat4VFjqyvzpA6KvQZGpVxsqKuh",
+    date: "2024-01-20",
+    status: "Approved",
+  },
+  {
+    id: 2,
+    userName: "Jane Smith",
+    amount: 1500,
+    walletAddress: "3J98t1WpEZ73CNmYviecrnyiWrnqRhWNLy",
+    date: "2024-01-22",
+    status: "Pending",
+  },
+  {
+    id: 3,
+    userName: "Mike Johnson",
+    amount: 800,
+    walletAddress: "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq",
+    date: "2024-01-18",
+    status: "Rejected",
+  },
+  {
+    id: 4,
+    userName: "Sarah Williams",
+    amount: 2000,
+    walletAddress: "1A1z7agoat4VFjqyvzpA6KvQZGpVxsqKuh",
+    date: "2024-01-23",
+    status: "Pending",
+  },
+  {
+    id: 5,
+    userName: "Tom Brown",
+    amount: 3500,
+    walletAddress: "3J98t1WpEZ73CNmYviecrnyiWrnqRhWNLy",
+    date: "2024-01-21",
+    status: "Pending",
+  },
+]
+
+// Admin investment management data
+export const adminInvestments = [
+  {
+    id: 1,
+    userName: "John Doe",
+    investmentPlan: "Basic Plan",
+    amountInvested: 1000,
+    startDate: "2024-01-15",
+    endDate: "2024-02-14",
+    roi: 12,
+    currentValue: 1120,
+    status: "Active",
+  },
+  {
+    id: 2,
+    userName: "Jane Smith",
+    investmentPlan: "Standard Plan",
+    amountInvested: 10000,
+    startDate: "2024-01-01",
+    endDate: "2024-03-01",
+    roi: 18,
+    currentValue: 11800,
+    status: "Active",
+  },
+  {
+    id: 3,
+    userName: "Mike Johnson",
+    investmentPlan: "Basic Plan",
+    amountInvested: 2500,
+    startDate: "2023-12-15",
+    endDate: "2024-01-14",
+    roi: 12,
+    currentValue: 2800,
+    status: "Completed",
+  },
+  {
+    id: 4,
+    userName: "Sarah Williams",
+    investmentPlan: "Long-Term Investment",
+    amountInvested: 50000,
+    startDate: "2024-01-10",
+    endDate: "2024-07-10",
+    roi: 24,
+    currentValue: 55200,
+    status: "Active",
+  },
+  {
+    id: 5,
+    userName: "Tom Brown",
+    investmentPlan: "Standard Plan",
+    amountInvested: 5000,
+    startDate: "2024-01-08",
+    endDate: "2024-03-08",
+    roi: 18,
+    currentValue: 5900,
+    status: "Active",
+  },
+  {
+    id: 6,
+    userName: "Emma Davis",
+    investmentPlan: "Basic Plan",
+    amountInvested: 1500,
+    startDate: "2023-11-20",
+    endDate: "2023-12-20",
+    roi: 12,
+    currentValue: 1680,
+    status: "Completed",
+  },
+]
+
+// Admin deposit requests data
+export const adminDepositRequests = [
+  {
+    id: 1,
+    userName: "John Doe",
+    amount: 5000,
+    paymentMethod: "Bitcoin",
+    date: "2024-01-20",
+    status: "Approved",
+  },
+  {
+    id: 2,
+    userName: "Jane Smith",
+    amount: 10000,
+    paymentMethod: "Ethereum",
+    date: "2024-01-22",
+    status: "Pending",
+  },
+  {
+    id: 3,
+    userName: "Mike Johnson",
+    amount: 2500,
+    paymentMethod: "USDT",
+    date: "2024-01-18",
+    status: "Rejected",
+  },
+  {
+    id: 4,
+    userName: "Sarah Williams",
+    amount: 50000,
+    paymentMethod: "Bitcoin",
+    date: "2024-01-23",
+    status: "Pending",
+  },
+  {
+    id: 5,
+    userName: "Tom Brown",
+    amount: 7500,
+    paymentMethod: "Ethereum",
+    date: "2024-01-21",
+    status: "Approved",
+  },
+  {
+    id: 6,
+    userName: "Emma Davis",
+    amount: 1500,
+    paymentMethod: "USDT",
+    date: "2024-01-19",
+    status: "Pending",
+  },
+]
+
+// Investment growth data for chart
+export const investmentGrowthData = [
+  { month: "Jan", invested: 10000, currentValue: 10500, profit: 500 },
+  { month: "Feb", invested: 15000, currentValue: 16200, profit: 1200 },
+  { month: "Mar", invested: 20000, currentValue: 22100, profit: 2100 },
+  { month: "Apr", invested: 25000, currentValue: 28500, profit: 3500 },
+  { month: "May", invested: 30000, currentValue: 35200, profit: 5200 },
+  { month: "Jun", invested: 40000, currentValue: 48500, profit: 8500 },
+]
