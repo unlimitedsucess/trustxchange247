@@ -35,7 +35,7 @@ export function InvestmentPlans() {
   }, [])
 
   const defaultFeatures = [
-    "24/7 Premium Support",
+    "24/7 Premium Support ",
     "Instant Withdrawals",
     "Principal Included"
   ]
