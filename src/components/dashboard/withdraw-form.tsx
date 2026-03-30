@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -16,10 +16,30 @@ export function WithdrawForm() {
   const [amount, setAmount] = useState("")
   const [walletAddress, setWalletAddress] = useState("")
   const [transactionPin, setTransactionPin] = useState("")
+  const [hasPin, setHasPin] = useState<boolean | null>(null)
   
   const token = useSelector((state: RootState) => state.token.token)
   const { sendHttpRequest, loading } = useHttp()
   const { toast } = useToast()
+
+  useEffect(() => {
+    const fetchPinStatus = async () => {
+      try {
+        const res = await fetch("/api/user/dashboard", {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        const data = await res.json()
+        if (data.success && data.data?.user) {
+          setHasPin(data.data.user.hasTransactionPin)
+        }
+      } catch (err) {
+        console.error("Failed to check PIN status", err)
+      }
+    }
+    if (token) {
+      fetchPinStatus()
+    }
+  }, [token])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,7 +70,7 @@ export function WithdrawForm() {
         url: "/api/user/withdrawal",
         method: "POST",
         isAuth: true,
-        token: token,
+        token: token || undefined,
         body: {
           amount: withdrawAmount,
           walletAddress,
@@ -102,20 +122,24 @@ export function WithdrawForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="transactionPin">Transaction PIN (4-6 digits)</Label>
+          <Label htmlFor="transactionPin">
+            {hasPin ? "Enter Transaction PIN" : "Create Transaction PIN (4-6 digits)"}
+          </Label>
           <Input
             id="transactionPin"
             type="password"
             maxLength={6}
-            placeholder="Enter or create your secure PIN"
+            placeholder={hasPin ? "Enter your secure PIN" : "Create a new secure PIN"}
             value={transactionPin}
             onChange={(e) => setTransactionPin(e.target.value)}
             disabled={loading}
             required
           />
-          <p className="text-xs text-muted-foreground group">
-            <span className="font-semibold text-primary">Note:</span> If this is your first withdrawal, the PIN you enter here will be permanently saved as your Transaction PIN.
-          </p>
+          {!hasPin && (
+            <p className="text-xs text-muted-foreground group">
+              <span className="font-semibold text-primary">Note:</span> This is your first withdrawal. The PIN you enter here will be permanently saved as your master Transaction PIN.
+            </p>
+          )}
         </div>
 
         <Button type="submit" className="w-full h-11 font-semibold" disabled={loading}>

@@ -23,7 +23,7 @@ export async function GET(req: Request) {
     const [deposits, withdrawals, userObj] = await Promise.all([
       Deposit.find({ user: userId }),
       Withdrawal.find({ user: userId }),
-      User.findById(userId).select("fullName email")
+      User.findById(userId).select("fullName email transactionPin")
     ]);
 
     let totalInvested = 0;
@@ -85,6 +85,7 @@ export async function GET(req: Request) {
       user: {
         name: userObj?.fullName || "Investor",
         email: userObj?.email || "...",
+        hasTransactionPin: !!userObj?.transactionPin
       }
     };
 
