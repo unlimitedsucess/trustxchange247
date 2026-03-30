@@ -4,16 +4,7 @@ import Deposit from "@/models/deposit";
 import { verifyToken } from "@/lib/auth";
 import mongoose from "mongoose";
 
-// ROI configuration with min & max amounts
-const planConfig = {
-  "Basic Plan": { roi: 5, interval: "daily", duration: 7, minAmount: 100, maxAmount: 500 },
-  "Silver Plan": { roi: 7, interval: "daily", duration: 14, minAmount: 500, maxAmount: 1000 },
-  "Gold Plan": { roi: 10, interval: "daily", duration: 21, minAmount: 1000, maxAmount: 5000 },
-  "Long Term Plan": { roi: 12, interval: "weekly", duration: 8, minAmount: 5000 }, // no maxAmount
-} as const;
-
-type PlanName = keyof typeof planConfig;
-type PlanDetails = { roi: number; interval: string; duration: number; minAmount?: number; maxAmount?: number };
+import InvestmentPlan from "@/models/investmentPlan";
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,37 +19,23 @@ export async function POST(req: NextRequest) {
     if (!wallet) return NextResponse.json({ message: "Wallet is required." }, { status: 400 });
     if (!amount || numericAmount <= 0) return NextResponse.json({ message: "Amount must be greater than 0." }, { status: 400 });
 
-    const planDetailsRaw = planConfig[plan as PlanName];
-    if (!planDetailsRaw) return NextResponse.json({ message: "Invalid plan selected." }, { status: 400 });
+    const planDetails = await InvestmentPlan.findOne({ name: plan, isActive: true });
+    if (!planDetails) {
+      return NextResponse.json({ message: "Invalid or inactive plan selected." }, { status: 400 });
+    }
 
-    const planDetails: PlanDetails = {
-      roi: planDetailsRaw.roi,
-      interval: planDetailsRaw.interval,
-      duration: planDetailsRaw.duration,
-      minAmount: planDetailsRaw.minAmount,
-      maxAmount: (planDetailsRaw as { maxAmount?: number }).maxAmount,
-    };
-
-    // Check minAmount
-    if (planDetails.minAmount && numericAmount < planDetails.minAmount) {
+    // Check minAmount dynamically from database
+    if (numericAmount < planDetails.minInvestment) {
       return NextResponse.json(
-        { message: `Amount is below the minimum for ${plan}: ${planDetails.minAmount}` },
+        { message: `Amount is below the minimum for ${plan}: $${planDetails.minInvestment}` },
         { status: 400 }
       );
     }
 
-    // Check maxAmount
-    if (planDetails.maxAmount && numericAmount > planDetails.maxAmount) {
-      const planNames = Object.keys(planConfig) as PlanName[];
-      const currentIndex = planNames.indexOf(plan as PlanName);
-      const nextPlan = planNames[currentIndex + 1];
-
-      const nextPlanMsg = nextPlan
-        ? `Amount exceeds ${plan}. Try the next plan: ${nextPlan}`
-        : `Amount exceeds the limit for ${plan}. Maximum allowed: ${planDetails.maxAmount}`;
-
+    // Check maxAmount dynamically from database
+    if (planDetails.maxInvestment && numericAmount > planDetails.maxInvestment) {
       return NextResponse.json(
-        { message: nextPlanMsg },
+        { message: `Amount exceeds the limit for ${plan}. Maximum allowed: $${planDetails.maxInvestment}` },
         { status: 400 }
       );
     }
@@ -69,7 +46,7 @@ export async function POST(req: NextRequest) {
       plan,
       wallet,
       amount: numericAmount,
-      roi: planDetails.roi,
+      roi: planDetails.dailyRoi || planDetails.monthlyRoi,
       currentBalance: numericAmount,
       status: "pending",
       startDate: null,
