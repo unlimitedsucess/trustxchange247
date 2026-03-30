@@ -58,7 +58,7 @@ export default function InvestmentsPage() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-h-screen">
+      <main className="flex-1 flex flex-col min-h-screen min-w-0">
         {/* Mobile Header */}
         <div className="md:hidden flex items-center justify-between p-4 border-b border-border bg-background sticky top-0 z-30">
           <span className="font-semibold text-lg">Investments</span>
@@ -73,7 +73,7 @@ export default function InvestmentsPage() {
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 md:p-8 min-w-0">
           {/* Breadcrumb */}
           <div className="mb-6 md:mb-8 text-sm text-muted-foreground">
             <span className="text-foreground font-semibold">Dashboard</span> /

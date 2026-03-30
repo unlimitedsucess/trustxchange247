@@ -128,13 +128,13 @@ export function InvestmentsDashboard({ data = [] }: { data: DepositData[] }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 font-semibold">Investment Plan</th>
-                  <th className="text-right py-3 px-4 font-semibold">Invested Amount</th>
-                  <th className="text-left py-3 px-4 font-semibold">Start Date</th>
-                  <th className="text-left py-3 px-4 font-semibold">End Date</th>
-                  <th className="text-right py-3 px-4 font-semibold">ROI %</th>
-                  <th className="text-right py-3 px-4 font-semibold">Current Value</th>
-                  <th className="text-center py-3 px-4 font-semibold">Status</th>
+                  <th className="text-left py-3 px-4 font-semibold whitespace-nowrap">Investment Plan</th>
+                  <th className="text-right py-3 px-4 font-semibold whitespace-nowrap">Invested Amount</th>
+                  <th className="text-left py-3 px-4 font-semibold whitespace-nowrap">Start Date</th>
+                  <th className="text-left py-3 px-4 font-semibold whitespace-nowrap">End Date</th>
+                  <th className="text-right py-3 px-4 font-semibold whitespace-nowrap">ROI %</th>
+                  <th className="text-right py-3 px-4 font-semibold whitespace-nowrap">Current Value</th>
+                  <th className="text-center py-3 px-4 font-semibold whitespace-nowrap">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -147,13 +147,13 @@ export function InvestmentsDashboard({ data = [] }: { data: DepositData[] }) {
                 ) : (
                   data.map((investment) => (
                     <tr key={investment._id} className="border-b border-border hover:bg-muted/50">
-                      <td className="py-3 px-4 font-medium">{investment.plan}</td>
-                      <td className="text-right py-3 px-4">${(investment.amount || 0).toLocaleString()}</td>
-                      <td className="py-3 px-4">{investment.startDate ? new Date(investment.startDate).toLocaleDateString() : 'N/A'}</td>
-                      <td className="py-3 px-4">{investment.endDate ? new Date(investment.endDate).toLocaleDateString() : 'N/A'}</td>
-                      <td className="text-right py-3 px-4">{investment.roi || 0}%</td>
-                      <td className="text-right py-3 px-4 font-semibold text-success">${(investment.currentBalance || investment.amount || 0).toLocaleString()}</td>
-                      <td className="text-center py-3 px-4">
+                      <td className="py-3 px-4 font-medium whitespace-nowrap">{investment.plan}</td>
+                      <td className="text-right py-3 px-4 whitespace-nowrap">${(investment.amount || 0).toLocaleString()}</td>
+                      <td className="py-3 px-4 whitespace-nowrap">{investment.startDate ? new Date(investment.startDate).toLocaleDateString() : 'N/A'}</td>
+                      <td className="py-3 px-4 whitespace-nowrap">{investment.endDate ? new Date(investment.endDate).toLocaleDateString() : 'N/A'}</td>
+                      <td className="text-right py-3 px-4 whitespace-nowrap">{investment.roi || 0}%</td>
+                      <td className="text-right py-3 px-4 font-semibold text-success whitespace-nowrap">${(investment.currentBalance || investment.amount || 0).toLocaleString()}</td>
+                      <td className="text-center py-3 px-4 whitespace-nowrap">
                         <Badge variant={investment.status === "active" ? "default" : investment.status === "pending" ? "secondary" : "outline"} className="capitalize">
                           {investment.status}
                         </Badge>
