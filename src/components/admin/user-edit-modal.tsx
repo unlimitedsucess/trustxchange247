@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import {
   Dialog,
@@ -15,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
 
@@ -25,11 +24,8 @@ interface UserEditModalProps {
     name: string
     email: string
     country: string
-    deposit: string
-    withdrawal: string
     status: "Active" | "Suspended"
     transactionPin?: string
-    totalBonus: number
   } | null
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -37,13 +33,8 @@ interface UserEditModalProps {
 
 export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) {
   const [formData, setFormData] = useState(
-    user ? { ...user, password: "" } : { id: "", name: "", email: "", country: "", deposit: "", withdrawal: "", status: "Active", password: "", transactionPin: "", totalBonus: 0 },
+    user ? { ...user, password: "" } : { id: "", name: "", email: "", country: "", status: "Active", password: "", transactionPin: "" },
   )
-  const [dailyReturn, setDailyReturn] = useState({ 
-    amount: "", 
-    day: "", 
-    date: new Date().toISOString().split("T")[0] 
-  })
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   
@@ -58,11 +49,6 @@ export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleDailyReturnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setDailyReturn((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleStatusChange = (value: string) => {
@@ -81,14 +67,12 @@ export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) 
 
     setIsLoading(true)
     try {
-      // 1. Update User Details (including Bonus)
       const payload: any = {
         fullName: formData.name,
         email: formData.email,
         country: formData.country,
         status: formData.status,
-        transactionPin: formData.transactionPin || "",
-        totalBonus: Number(formData.totalBonus) || 0
+        transactionPin: formData.transactionPin || ""
       }
       if (formData.password && formData.password.trim() !== "") {
         payload.password = formData.password
@@ -105,24 +89,7 @@ export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) 
         throw new Error(errorData.message || "Failed to update user")
       }
 
-      // 2. Add Daily Return if provided
-      if (dailyReturn.amount && dailyReturn.day) {
-        const drRes = await fetch("/api/admin/daily-returns", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
-            userId: formData.id,
-            amount: Number(dailyReturn.amount),
-            day: dailyReturn.day,
-            date: dailyReturn.date
-          })
-        })
-        if (!drRes.ok) {
-            toast({ title: "Warning", description: "User updated but daily return failed", variant: "destructive" })
-        }
-      }
-
-      toast({ title: "Success", description: `User ${formData.name} updated successfully` })
+      toast({ title: "Success", description: `User ${formData.name} details updated successfully` })
       onOpenChange(false)
       window.location.reload()
     } catch (err: any) {
@@ -136,10 +103,10 @@ export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Edit User & Add Returns</DialogTitle>
-          <DialogDescription>Update information, bonuses, and daily returns</DialogDescription>
+          <DialogTitle>Edit User Profile</DialogTitle>
+          <DialogDescription>Update account information and security settings</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -160,7 +127,7 @@ export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) 
                 <Input id="country" name="country" value={formData.country} onChange={handleChange} placeholder="Country" />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status">Account Status</Label>
                 <Select value={formData.status} onValueChange={handleStatusChange}>
                     <SelectTrigger id="status"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -171,44 +138,21 @@ export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <Label htmlFor="transactionPin">Transaction PIN</Label>
-                <Input id="transactionPin" name="transactionPin" value={formData.transactionPin || ""} onChange={handleChange} placeholder="PIN" />
-            </div>
-            <div className="space-y-2">
-                {/* Global Bonus removed - handled per investment now */}
-            </div>
+          <div className="space-y-2">
+              <Label htmlFor="transactionPin">Transaction PIN</Label>
+              <Input id="transactionPin" name="transactionPin" value={formData.transactionPin || ""} onChange={handleChange} placeholder="Security PIN" />
           </div>
 
           <div className="space-y-2 border-t pt-4">
-            <Label className="text-accent font-bold">Add New Daily Return</Label>
-            <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                    <Label htmlFor="dr_amount" className="text-xs">Amount ($)</Label>
-                    <Input id="dr_amount" name="amount" type="number" value={dailyReturn.amount} onChange={handleDailyReturnChange} placeholder="0.00" />
-                </div>
-                <div className="space-y-1">
-                    <Label htmlFor="dr_day" className="text-xs">Day Label</Label>
-                    <Input id="dr_day" name="day" type="text" value={dailyReturn.day} onChange={handleDailyReturnChange} placeholder="e.g. Day 1" />
-                </div>
-                <div className="space-y-1 col-span-2">
-                    <Label htmlFor="dr_date" className="text-xs">Transaction Date</Label>
-                    <Input id="dr_date" name="date" type="date" value={dailyReturn.date} onChange={handleDailyReturnChange} />
-                </div>
-            </div>
-          </div>
-
-          <div className="space-y-2 border-t pt-2">
-            <Label htmlFor="password">Set New Password (Optional)</Label>
-            <Input id="password" name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Leave blank to keep current" />
+            <Label htmlFor="password">Reset Password (Optional)</Label>
+            <Input id="password" name="password" type="password" value={formData.password} onChange={handleChange} placeholder="New password" />
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleSubmit} disabled={isLoading} className="gap-2">
-            {isLoading ? "Saving..." : "Save User Data"}
+            {isLoading ? "Saving..." : "Update Profile"}
           </Button>
         </DialogFooter>
       </DialogContent>
