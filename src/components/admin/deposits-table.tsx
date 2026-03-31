@@ -8,6 +8,14 @@ import { CheckCircle, XCircle, Trash2 } from "lucide-react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog"
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -17,10 +25,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 export function DepositsTable() {
   const [deposits, setDeposits] = useState<any[]>([])
-  const [confirmingId, setConfirmingId] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editRoi, setEditRoi] = useState<number>(0)
+  const [editBonus, setEditBonus] = useState<number>(0)
   const [confirmingAction, setConfirmingAction] = useState<"approve" | "reject" | "delete" | null>(null)
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
@@ -59,16 +71,16 @@ export function DepositsTable() {
       const res = await fetch(`/api/admin/deposits/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status: "active" })
+        body: JSON.stringify({ status: "active", roi: editRoi, bonus: editBonus })
       })
       if (res.ok) {
         setDeposits(deposits.map((d) => (d.id === id ? { ...d, status: "Approved" } : d)))
-        toast({ title: "Success", description: "Deposit approved successfully" })
+        toast({ title: "Success", description: "Deposit approved with ROI & Bonus" })
       }
     } catch (err) {
       toast({ title: "Error", description: "Failed to approve deposit", variant: "destructive" })
     }
-    setConfirmingId(null)
+    setEditingId(null)
     setConfirmingAction(null)
   }
 
@@ -86,7 +98,7 @@ export function DepositsTable() {
     } catch (err) {
       toast({ title: "Error", description: "Failed to reject deposit", variant: "destructive" })
     }
-    setConfirmingId(null)
+    setEditingId(null)
     setConfirmingAction(null)
   }
 
@@ -103,7 +115,7 @@ export function DepositsTable() {
     } catch (err) {
       toast({ title: "Error", description: "Failed to delete deposit", variant: "destructive" })
     }
-    setConfirmingId(null)
+    setEditingId(null)
     setConfirmingAction(null)
   }
 
@@ -160,7 +172,7 @@ export function DepositsTable() {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => {
-                                  setConfirmingId(deposit.id)
+                                  setEditingId(deposit.id)
                                   setConfirmingAction("approve")
                                 }}
                                 className="h-8 w-8 p-0"
@@ -171,7 +183,7 @@ export function DepositsTable() {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => {
-                                  setConfirmingId(deposit.id)
+                                  setEditingId(deposit.id)
                                   setConfirmingAction("reject")
                                 }}
                                 className="h-8 w-8 p-0"
@@ -186,7 +198,7 @@ export function DepositsTable() {
                             size="sm"
                             variant="ghost"
                             onClick={() => {
-                              setConfirmingId(deposit.id)
+                              setEditingId(deposit.id)
                               setConfirmingAction("delete")
                             }}
                             className="h-8 w-8 p-0"
@@ -208,48 +220,71 @@ export function DepositsTable() {
         </CardContent>
       </Card>
 
-      {/* Confirmation Dialog */}
-      <AlertDialog open={confirmingId !== null} onOpenChange={(open) => !open && setConfirmingId(null)}>
+      {/* Approve Modal */}
+      <Dialog open={editingId !== null && confirmingAction === "approve"} onOpenChange={(open) => !open && setEditingId(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Approve Deposit</DialogTitle>
+            <DialogDescription>Set the final ROI and any initial bonus for this investment.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="app_roi">ROI Percentage (%)</Label>
+              <Input
+                id="app_roi"
+                type="number"
+                value={editRoi}
+                onChange={(e) => setEditRoi(Number(e.target.value))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="app_bonus" className="text-primary font-bold">Welcome Bonus ($)</Label>
+              <Input
+                id="app_bonus"
+                type="number"
+                value={editBonus}
+                onChange={(e) => setEditBonus(Number(e.target.value))}
+                className="border-primary"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingId(null)}>Cancel</Button>
+            <Button onClick={() => handleApprove(editingId!)}>Approve & Set Yield</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject/Delete Confirmation */}
+      <AlertDialog open={editingId !== null && (confirmingAction === "reject" || confirmingAction === "delete")} onOpenChange={(open) => !open && setEditingId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirmingAction === "approve"
-                ? "Approve Deposit?"
-                : confirmingAction === "reject"
-                ? "Reject Deposit?"
-                : "Delete Deposit?"}
+              {confirmingAction === "reject" ? "Reject Deposit?" : "Delete Deposit?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmingAction === "approve"
-                ? "This deposit request will be approved and funds will be added to the user account."
-                : confirmingAction === "reject"
+              {confirmingAction === "reject"
                 ? "This deposit request will be rejected and the user will be notified."
                 : "This deposit will be permanently deleted from the database. This action cannot be undone."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => {
-              if (confirmingId && confirmingAction === "approve") {
-                handleApprove(confirmingId)
-              } else if (confirmingId && confirmingAction === "reject") {
-                handleReject(confirmingId)
-              } else if (confirmingId && confirmingAction === "delete") {
-                handleDelete(confirmingId)
-              }
-            }}
-            className={
-              confirmingAction === "reject" || confirmingAction === "delete"
-                ? "bg-destructive hover:bg-destructive/90"
-                : ""
-            }
-          >
-            {confirmingAction === "approve"
-              ? "Approve"
-              : confirmingAction === "reject"
-              ? "Reject"
-              : "Delete"}
-          </AlertDialogAction>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel asChild>
+                <Button variant="outline">Cancel</Button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+                <Button 
+                    variant="destructive"
+                    onClick={() => {
+                        if (editingId && confirmingAction === "reject") handleReject(editingId)
+                        if (editingId && confirmingAction === "delete") handleDelete(editingId)
+                    }}
+                >
+                    {confirmingAction === "reject" ? "Reject" : "Delete"}
+                </Button>
+            </AlertDialogAction>
+          </DialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>

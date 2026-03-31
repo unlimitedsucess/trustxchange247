@@ -28,6 +28,9 @@ export function InvestmentsTable() {
   const [editStatus, setEditStatus] = useState("")
   const [editRoi, setEditRoi] = useState<number>(0)
   const [editBonus, setEditBonus] = useState<number>(0)
+  const [newDailyReturnAmount, setNewDailyReturnAmount] = useState("")
+  const [newDailyReturnDay, setNewDailyReturnDay] = useState("")
+  const [targetUserId, setTargetUserId] = useState<string | null>(null)
   const { toast } = useToast()
   
   const token = useSelector((state: RootState) => state.token.token)
@@ -42,6 +45,7 @@ export function InvestmentsTable() {
         if (data.success) {
           const mapped = data.data.map((inv: any) => ({
             id: inv._id,
+            userId: inv.user?._id,
             userName: inv.user?.fullName || "Unknown",
             investmentPlan: inv.plan || "N/A",
             amountInvested: inv.amount || 0,
@@ -67,29 +71,50 @@ export function InvestmentsTable() {
     const investment = investments.find((inv) => inv.id === id)
     if (investment) {
       setEditingId(id)
+      setTargetUserId(investment.userId)
       setEditStatus(investment.status.toLowerCase())
       setEditRoi(investment.roi)
       setEditBonus(investment.bonus || 0)
+      setNewDailyReturnAmount("")
+      setNewDailyReturnDay("")
     }
   }
 
   const handleSaveEdit = async () => {
     if (editingId) {
       try {
+        // 1. Update investment status/roi/bonus
         const res = await fetch(`/api/admin/deposits/${editingId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify({ status: editStatus, roi: editRoi, bonus: editBonus })
         })
-        if (res.ok) {
-          
-          setInvestments(investments.map((inv) => (inv.id === editingId ? { ...inv, status: editStatus === "active" ? "Active" : editStatus === "completed" ? "Completed" : "Pending", roi: editRoi, bonus: editBonus } : inv)))
-          
-          toast({
-            title: "Success",
-            description: "Investment updated successfully",
-          })
+        
+        if (!res.ok) throw new Error("Macro update failed")
+
+        // 2. Add Daily Return if provided
+        if (newDailyReturnAmount && newDailyReturnDay && targetUserId) {
+            const drRes = await fetch("/api/admin/daily-returns", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({
+                    userId: targetUserId,
+                    amount: Number(newDailyReturnAmount),
+                    day: newDailyReturnDay
+                })
+            })
+            if (!drRes.ok) {
+                toast({ title: "Partial Success", description: "Investment updated but return logging failed", variant: "destructive" })
+            }
         }
+          
+        setInvestments(investments.map((inv) => (inv.id === editingId ? { ...inv, status: editStatus === "active" ? "Active" : editStatus === "completed" ? "Completed" : "Pending", roi: editRoi, bonus: editBonus } : inv)))
+        
+        toast({
+          title: "Success",
+          description: "All corrections pushed online successfully",
+        })
+
       } catch (err) {
         toast({ title: "Error", description: "Operation failed", variant: "destructive" })
       }
@@ -186,15 +211,16 @@ export function InvestmentsTable() {
 
       {/* Edit Modal */}
       <Dialog open={editingId !== null} onOpenChange={(open) => !open && setEditingId(null)}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[450px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Investment</DialogTitle>
-            <DialogDescription>Update investment details, ROI and bonuses</DialogDescription>
+            <DialogTitle>Edit Investment & Performance</DialogTitle>
+            <DialogDescription>Update status, ROI, bonus, and log new daily returns.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
+            {/* Status Section */}
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">Current Status</Label>
               <Select value={editStatus} onValueChange={setEditStatus}>
                 <SelectTrigger>
                   <SelectValue />
@@ -207,25 +233,58 @@ export function InvestmentsTable() {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="roi">ROI Percentage (%)</Label>
-              <Input
-                id="roi"
-                type="number"
-                value={editRoi}
-                onChange={(e) => setEditRoi(Number(e.target.value))}
-              />
+            {/* Financial Adjustments Section */}
+            <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                <div className="space-y-2">
+                    <Label htmlFor="roi">Net ROI (%)</Label>
+                    <Input
+                        id="roi"
+                        type="number"
+                        value={editRoi}
+                        onChange={(e) => setEditRoi(Number(e.target.value))}
+                        className="bg-muted/30"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="bonus" className="text-primary font-bold">Extra Bonus ($)</Label>
+                    <Input
+                        id="bonus"
+                        type="number"
+                        value={editBonus}
+                        onChange={(e) => setEditBonus(Number(e.target.value))}
+                        className="border-primary bg-primary/5"
+                    />
+                </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="bonus" className="text-primary font-bold">Extra Bonus ($)</Label>
-              <Input
-                id="bonus"
-                type="number"
-                value={editBonus}
-                onChange={(e) => setEditBonus(Number(e.target.value))}
-                className="border-primary"
-              />
+            {/* Log New Performance Section */}
+            <div className="space-y-3 border-t pt-4">
+              <Label className="text-xs font-bold uppercase text-muted-foreground tracking-wider underline">Log Individual Daily Return</Label>
+              <div className="grid grid-cols-2 gap-4 p-3 bg-muted/20 border border-dashed rounded-lg">
+                  <div className="space-y-1">
+                      <Label htmlFor="dr_amount" className="text-[10px]">Return Amount ($)</Label>
+                      <Input 
+                        id="dr_amount" 
+                        type="number" 
+                        placeholder="0.00" 
+                        value={newDailyReturnAmount}
+                        onChange={(e) => setNewDailyReturnAmount(e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                  </div>
+                  <div className="space-y-1">
+                      <Label htmlFor="dr_day" className="text-[10px]">Reference Label</Label>
+                      <Input 
+                        id="dr_day" 
+                        type="text" 
+                        placeholder="e.g. Monday" 
+                        value={newDailyReturnDay}
+                        onChange={(e) => setNewDailyReturnDay(e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                  </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground px-1 italic">Adding values here will create a separate daily return entry in user history.</p>
             </div>
           </div>
 
@@ -233,7 +292,7 @@ export function InvestmentsTable() {
             <Button variant="outline" onClick={() => setEditingId(null)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveEdit}>Save Changes</Button>
+            <Button onClick={handleSaveEdit}>Process Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
