@@ -19,12 +19,21 @@ export const metadata: Metadata = {
     description: "Grow your wealth securely with TrustXchange247. Professional crypto trading and automated ROI plans.",
     url: "https://trustxchange247.com",
     siteName: "TrustXchange247",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "TrustXchange247 - Secure Crypto Investment Platform",
+      },
+    ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "TrustXchange247 | Crypto Investments",
     description: "Secure, transparent, and professional cryptocurrency investment platform.",
+    images: ["/og-image.png"],
   },
   generator: "Next.js",
   icons: {
