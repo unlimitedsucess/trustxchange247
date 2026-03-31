@@ -3,7 +3,8 @@ import mongoose, { Schema, model, models } from "mongoose";
 export interface IDailyReturn {
   user: mongoose.Types.ObjectId;
   amount: number;
-  day: string; // e.g. "Monday", "2024-03-31" or just "Day 1"
+  day: string; // label like "Monday" or "Bonus Reward"
+  date: Date;   // actual calendar date
   createdAt?: Date;
 }
 
@@ -12,6 +13,7 @@ const dailyReturnSchema = new Schema<IDailyReturn>(
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     amount: { type: Number, required: true },
     day: { type: String, required: true },
+    date: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );

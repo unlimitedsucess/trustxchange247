@@ -84,7 +84,7 @@ export async function GET(req: Request) {
         id: dr._id.toString(),
         amount: `$${dr.amount.toFixed(2)}`,
         day: dr.day,
-        date: new Date(dr.createdAt).toLocaleDateString()
+        date: new Date(dr.date || dr.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
     }));
 
     const stats = {

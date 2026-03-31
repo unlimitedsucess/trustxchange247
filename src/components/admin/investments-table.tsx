@@ -30,6 +30,7 @@ export function InvestmentsTable() {
   const [editBonus, setEditBonus] = useState<number>(0)
   const [newDailyReturnAmount, setNewDailyReturnAmount] = useState("")
   const [newDailyReturnDay, setNewDailyReturnDay] = useState("")
+  const [newDailyReturnDate, setNewDailyReturnDate] = useState(new Date().toISOString().split("T")[0])
   const [targetUserId, setTargetUserId] = useState<string | null>(null)
   const { toast } = useToast()
   
@@ -77,6 +78,7 @@ export function InvestmentsTable() {
       setEditBonus(investment.bonus || 0)
       setNewDailyReturnAmount("")
       setNewDailyReturnDay("")
+      setNewDailyReturnDate(new Date().toISOString().split("T")[0])
     }
   }
 
@@ -100,7 +102,8 @@ export function InvestmentsTable() {
                 body: JSON.stringify({
                     userId: targetUserId,
                     amount: Number(newDailyReturnAmount),
-                    day: newDailyReturnDay
+                    day: newDailyReturnDay,
+                    date: newDailyReturnDate
                 })
             })
             if (!drRes.ok) {
@@ -280,6 +283,16 @@ export function InvestmentsTable() {
                         placeholder="e.g. Monday" 
                         value={newDailyReturnDay}
                         onChange={(e) => setNewDailyReturnDay(e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                  </div>
+                  <div className="space-y-1 col-span-2">
+                      <Label htmlFor="dr_date" className="text-[10px]">Actual Date</Label>
+                      <Input 
+                        id="dr_date" 
+                        type="date" 
+                        value={newDailyReturnDate}
+                        onChange={(e) => setNewDailyReturnDate(e.target.value)}
                         className="h-8 text-xs"
                       />
                   </div>

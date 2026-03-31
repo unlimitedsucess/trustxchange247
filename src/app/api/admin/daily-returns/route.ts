@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   try {
     await connectDB();
     const body = await req.json();
-    const { userId, amount, day } = body;
+    const { userId, amount, day, date } = body;
     if (!userId || !amount || !day) {
         return NextResponse.json({ success: false, message: "UserId, amount and day are required" }, { status: 400 });
     }
@@ -28,7 +28,12 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
     }
 
-    const newDailyReturn = await DailyReturn.create({ user: userId, amount, day });
+    const newDailyReturn = await DailyReturn.create({ 
+        user: userId, 
+        amount, 
+        day, 
+        date: date ? new Date(date) : new Date() 
+    });
 
     // Send notification email
     try {

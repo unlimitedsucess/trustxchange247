@@ -39,7 +39,11 @@ export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) 
   const [formData, setFormData] = useState(
     user ? { ...user, password: "" } : { id: "", name: "", email: "", country: "", deposit: "", withdrawal: "", status: "Active", password: "", transactionPin: "", totalBonus: 0 },
   )
-  const [dailyReturn, setDailyReturn] = useState({ amount: "", day: "" })
+  const [dailyReturn, setDailyReturn] = useState({ 
+    amount: "", 
+    day: "", 
+    date: new Date().toISOString().split("T")[0] 
+  })
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   
@@ -109,7 +113,8 @@ export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) 
           body: JSON.stringify({
             userId: formData.id,
             amount: Number(dailyReturn.amount),
-            day: dailyReturn.day
+            day: dailyReturn.day,
+            date: dailyReturn.date
           })
         })
         if (!drRes.ok) {
@@ -186,6 +191,10 @@ export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) 
                 <div className="space-y-1">
                     <Label htmlFor="dr_day" className="text-xs">Day Label</Label>
                     <Input id="dr_day" name="day" type="text" value={dailyReturn.day} onChange={handleDailyReturnChange} placeholder="e.g. Day 1" />
+                </div>
+                <div className="space-y-1 col-span-2">
+                    <Label htmlFor="dr_date" className="text-xs">Transaction Date</Label>
+                    <Input id="dr_date" name="date" type="date" value={dailyReturn.date} onChange={handleDailyReturnChange} />
                 </div>
             </div>
           </div>
