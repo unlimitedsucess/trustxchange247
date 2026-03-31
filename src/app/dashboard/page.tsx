@@ -5,6 +5,7 @@ import { DashboardOverview } from "@/components/dashboard/overview"
 import { InvestmentTable } from "@/components/dashboard/investment-table"
 import { WithdrawalTable } from "@/components/dashboard/withdrawal-table"
 import { InvestmentGrowthChart } from "@/components/dashboard/growth-chart"
+import { Card } from "@/components/ui/card"
 
 import { useEffect, useState } from "react"
 import { Menu } from "lucide-react"
@@ -19,18 +20,22 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<{
     totalInvested: number;
     totalProfit: number;
+    totalBonus: number;
     activeInvestments: number;
     withdrawableBalance: number;
     recentInvestments: any[];
     recentWithdrawals: any[];
+    dailyReturns: any[];
     user?: { name: string; email: string };
   }>({
     totalInvested: 0,
     totalProfit: 0,
+    totalBonus: 0,
     activeInvestments: 0,
     withdrawableBalance: 0,
     recentInvestments: [],
-    recentWithdrawals: []
+    recentWithdrawals: [],
+    dailyReturns: []
   })
 
   const token = useSelector((state: RootState) => state.token.token)
@@ -105,10 +110,45 @@ export default function DashboardPage() {
           <DashboardOverview 
             totalInvested={stats.totalInvested}
             totalProfit={stats.totalProfit}
+            totalBonus={stats.totalBonus}
             activeInvestments={stats.activeInvestments}
             withdrawableBalance={stats.withdrawableBalance}
           />
-          <InvestmentGrowthChart />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 my-8">
+            <InvestmentGrowthChart />
+            
+            {/* Daily Returns Section */}
+            <Card className="flex flex-col border-border bg-card shadow-sm p-6 overflow-hidden">
+                <h2 className="text-xl font-bold mb-4">Daily Returns History</h2>
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead className="bg-muted/50 border-b">
+                            <tr>
+                                <th className="text-left py-3 px-4 text-sm font-semibold">Day</th>
+                                <th className="text-right py-3 px-4 text-sm font-semibold">Amount</th>
+                                <th className="text-right py-3 px-4 text-sm font-semibold">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {stats.dailyReturns.length > 0 ? (
+                                stats.dailyReturns.slice(0, 5).map((dr: any) => (
+                                    <tr key={dr.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                                        <td className="py-3 px-4 text-sm font-medium">{dr.day}</td>
+                                        <td className="py-3 px-4 text-sm text-right font-bold text-primary">{dr.amount}</td>
+                                        <td className="py-3 px-4 text-sm text-right text-muted-foreground">{dr.date}</td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={3} className="py-8 text-center text-muted-foreground italic">No daily returns recorded yet.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
+          </div>
           <InvestmentTable data={stats.recentInvestments} />
           <WithdrawalTable data={stats.recentWithdrawals} />
         </div>

@@ -10,6 +10,7 @@ export interface IUser {
   verificationToken?: string;
   verificationExpires?: Date;
   transactionPin?: string;
+  totalBonus: number;
   createdAt?: Date;
 }
 
@@ -24,6 +25,7 @@ const userSchema = new Schema<IUser>({
   verificationToken: { type: String },
   verificationExpires: { type: Date },
   transactionPin: { type: String },
+  totalBonus: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
 });
 

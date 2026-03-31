@@ -30,7 +30,22 @@ export default function InvestmentPlansPage() {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
 
+  const [settings, setSettings] = useState<any>(null);
+
   useEffect(() => {
+    const fetchSettings = async () => {
+        try {
+            const res = await fetch("/api/admin/settings");
+            const data = await res.json();
+            if (data.success) {
+                setSettings(data.data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch settings", err);
+        }
+    };
+    fetchSettings();
+
     const fetchPlans = async () => {
       try {
         const res = await fetch(`/api/admin/plans?t=${new Date().getTime()}`, {
@@ -52,6 +67,7 @@ export default function InvestmentPlansPage() {
     };
     fetchPlans();
   }, []);
+
   const [successModalOpen, setSuccessModalOpen] = useState(false);
 
   const [successWalletAddress, setSuccessWalletAddress] = useState("");
@@ -114,20 +130,20 @@ export default function InvestmentPlansPage() {
         console.log("response", res);
         setConfirmModalOpen(false);
 
-        // Determine wallet address based on selectedWallet
+        // Determine wallet address based on selectedWallet and settings
         let address = "";
         let network: string | null = null;
         switch (selectedWallet) {
           case "BTC":
-            address = "bc1qmcyk7ak9f4dcvc9ynkhdqawkmazu4fqzmk0rma";
+            address = settings?.btcWallet || "bc1qmcyk7ak9f4dcvc9ynkhdqawkmazu4fqzmk0rma";
             network = null;
             break;
           case "ETH":
-            address = "0x4c5eecE2966A60DCd79B3182cDe82b5C9420B48E";
+            address = settings?.ethWallet || "0x4c5eecE2966A60DCd79B3182cDe82b5C9420B48E";
             network = null;
             break;
           case "USDT":
-            address = "TEBYYX38FSLK39QwnccgR9tUcHU2bupHuY";
+            address = settings?.usdtWalletTRC20 || "TEBYYX38FSLK39QwnccgR9tUcHU2bupHuY";
             network = "TRC20";
             break;
         }

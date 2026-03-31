@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     }
 
     // 1. Authenticate the User
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).select("transactionPin totalBonus");
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
@@ -75,8 +75,10 @@ export async function POST(req: Request) {
       }
     });
 
-    // Compute hard balance
-    const withdrawableBalance = totalProfit + completedInvestments - totalWithdrawnAndPending;
+    const totalBonus = user.totalBonus || 0;
+
+    // Compute hard balance including bonus
+    const withdrawableBalance = totalProfit + completedInvestments + totalBonus - totalWithdrawnAndPending;
 
     if (amount > withdrawableBalance) {
       return NextResponse.json(

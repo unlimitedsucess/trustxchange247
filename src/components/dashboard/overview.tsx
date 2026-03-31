@@ -7,6 +7,7 @@ import { motion } from "framer-motion"
 interface DashboardOverviewProps {
   totalInvested: number
   totalProfit: number
+  totalBonus: number
   activeInvestments: number
   withdrawableBalance: number
 }
@@ -14,6 +15,7 @@ interface DashboardOverviewProps {
 export function DashboardOverview({
   totalInvested = 0,
   totalProfit = 0,
+  totalBonus = 0,
   activeInvestments = 0,
   withdrawableBalance = 0,
 }: DashboardOverviewProps) {
@@ -33,6 +35,13 @@ export function DashboardOverview({
       color: "accent",
     },
     {
+        label: "Total Bonus",
+        value: `$${totalBonus.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        change: "Admin Rewards",
+        icon: Zap,
+        color: "primary",
+      },
+    {
       label: "Active Investments",
       value: activeInvestments.toString(),
       change: "Current plans",
@@ -50,7 +59,7 @@ export function DashboardOverview({
 
   return (
     <motion.div 
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8"
       initial="hidden"
       animate="visible"
       variants={{

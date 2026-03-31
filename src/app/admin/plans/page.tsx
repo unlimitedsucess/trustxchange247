@@ -238,7 +238,7 @@ export default function AdminPlansPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium">Daily ROI (%)</label>
-                  <input required max="100" step="0.1" type="number" className="w-full mt-1 p-2 border border-border rounded bg-background" value={formData.dailyRoi} onChange={e => setFormData({...formData, dailyRoi: e.target.value})} />
+                  <input required step="0.1" type="number" className="w-full mt-1 p-2 border border-border rounded bg-background" value={formData.dailyRoi} onChange={e => setFormData({...formData, dailyRoi: e.target.value})} />
                 </div>
                 <div>
                   <label className="text-sm font-medium">Duration (Days)</label>
@@ -286,7 +286,7 @@ export default function AdminPlansPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium">Daily ROI (%)</label>
-                  <input required max="100" step="0.1" type="number" className="w-full mt-1 p-2 border border-border rounded bg-background" value={formData.dailyRoi} onChange={e => setFormData({...formData, dailyRoi: e.target.value})} />
+                  <input required step="0.1" type="number" className="w-full mt-1 p-2 border border-border rounded bg-background" value={formData.dailyRoi} onChange={e => setFormData({...formData, dailyRoi: e.target.value})} />
                 </div>
                 <div>
                   <label className="text-sm font-medium">Duration (Days)</label>

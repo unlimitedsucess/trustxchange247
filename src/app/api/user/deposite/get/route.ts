@@ -3,15 +3,7 @@ import { connectDB } from "@/lib/db";
 import Deposit from "@/models/deposit";
 import { verifyToken } from "@/lib/auth";
 
-// ROI configuration with min & max amounts
-const planConfig = {
-  "Basic Plan": { roi: 5, interval: "daily", duration: 7 },
-  "Silver Plan": { roi: 7, interval: "daily", duration: 14 },
-  "Gold Plan": { roi: 10, interval: "daily", duration: 21 },
-  "Long Term Plan": { roi: 12, interval: "weekly", duration: 8 },
-} as const;
-
-type PlanName = keyof typeof planConfig;
+import InvestmentPlan from "@/models/investmentPlan";
 
 export async function GET(req: Request) {
   try {
@@ -21,50 +13,46 @@ export async function GET(req: Request) {
     // Fetch deposits for the logged-in user
     const deposits = await Deposit.find({ user: user.userId }).sort({ createdAt: -1 });
 
+    // Fetch all active plans to use for ROI calculation
+    const activePlans = await InvestmentPlan.find({ isActive: true });
+    const plansMap = new Map();
+    activePlans.forEach(p => plansMap.set(p.name, p));
+
     // Calculate current balance & end date for active deposits
     const enrichedDeposits = deposits.map(deposit => {
-      const planDetails = planConfig[deposit.plan as PlanName];
+      const dbPlan = plansMap.get(deposit.plan);
 
       let endDate = deposit.endDate;
       let currentBalance = deposit.currentBalance;
 
-      if (deposit.status === "active" && planDetails) {
+      if (deposit.status === "active" && dbPlan) {
         const start = deposit.startDate ?? deposit.createdAt;
         if (!deposit.endDate) {
           // Calculate endDate based on plan duration
-          const duration = planDetails.duration;
-          const interval = planDetails.interval;
+          const duration = dbPlan.durationDays;
           let end = new Date(start);
-
-          if (interval === "daily") {
-            end.setDate(end.getDate() + duration);
-          } else if (interval === "weekly") {
-            end.setDate(end.getDate() + duration * 7);
-          } else if (interval === "monthly") {
-            end.setMonth(end.getMonth() + duration);
-          }
-
+          end.setDate(end.getDate() + duration);
           endDate = end;
         }
 
-        // Calculate ROI
+        // Calculate ROI dynamically
         const now = new Date();
         const startTime = new Date(start);
         const endTime = endDate ? new Date(endDate) : now;
-        let periods = 0;
-
-        if (planDetails.interval === "daily") {
-          periods = Math.floor((now.getTime() - startTime.getTime()) / (1000 * 60 * 60 * 24));
-        } else if (planDetails.interval === "weekly") {
-          periods = Math.floor((now.getTime() - startTime.getTime()) / (1000 * 60 * 60 * 24 * 7));
-        }
-
-        const roiAmount = (deposit.amount * planDetails.roi * periods) / 100;
+        
+        // Days difference
+        const diffTime = Math.max(0, now.getTime() - startTime.getTime());
+        const periods = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        const roiAmount = (deposit.amount * dbPlan.dailyRoi * periods) / 100;
         currentBalance = deposit.amount + roiAmount;
 
-        // If endDate has passed, mark as completed
+        // If endDate has passed, mark as completed (but keep balance)
         if (endDate && now >= endDate) {
           deposit.status = "completed";
+          // Final balance at end date
+          const totalDays = Math.floor((endDate.getTime() - startTime.getTime()) / (1000 * 60 * 60 * 24));
+          currentBalance = deposit.amount + (deposit.amount * dbPlan.dailyRoi * totalDays) / 100;
         }
       }
 

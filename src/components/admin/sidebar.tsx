@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, TrendingUp, LogOut, X, Wallet, CreditCard, ShieldCheck, Layers } from "lucide-react"
+import { LayoutDashboard, Users, TrendingUp, LogOut, X, Wallet, CreditCard, ShieldCheck, Layers, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DarkModeToggle } from "@/components/layout/dark-mode-toggle"
 
@@ -20,6 +20,7 @@ export function AdminSidebar({ onClose }: AdminSidebarProps) {
     { label: "Plans", href: "/admin/plans", icon: Layers },
     { label: "Deposits", href: "/admin/deposits", icon: CreditCard },
     { label: "Withdrawals", href: "/admin/withdrawals", icon: Wallet },
+    { label: "Settings", href: "/admin/settings", icon: Settings },
   ]
 
   const isActive = (href: string) => pathname === href
