@@ -300,12 +300,12 @@ export default function InvestmentPlansPage() {
                 <span className="font-semibold">${successAmount}</span> to the{" "}
                 {selectedWallet} wallet below:
               </p>
-              <div className="p-4 bg-gray-100 rounded font-mono flex flex-col gap-2 text-black">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold">{successWalletAddress}</span>
+              <div className="p-4 bg-gray-100 rounded font-mono flex flex-col gap-2 text-black overflow-hidden relative">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-semibold text-xs sm:text-sm break-all">{successWalletAddress}</span>
                   <Button
                     size="sm"
-                   className="cursor-pointer bg-transparent"
+                   className="cursor-pointer bg-transparent shrink-0"
                     onClick={() => {
                       navigator.clipboard.writeText(successWalletAddress);
                       toast.success("Wallet address copied!");
