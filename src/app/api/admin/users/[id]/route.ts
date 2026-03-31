@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/user";
 import bcrypt from "bcrypt";
+import { sendBonusEmail } from "@/lib/email";
 
 export async function PUT(req: Request, props: { params: Promise<{ id: string }> }) {
   try {
@@ -9,6 +10,12 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
     const { id } = await props.params;
     const body = await req.json();
     
+    // Fetch old user to compare bonus
+    const oldUser = await User.findById(id);
+    if (!oldUser) {
+      return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
+    }
+
     // If the admin is updating the password, hash it
     if (body.password) {
       body.password = await bcrypt.hash(body.password, 10);
@@ -16,10 +23,24 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
       delete body.password; // Do not overwrite if no password is provided
     }
 
+    // Check if totalBonus is increased
+    const isBonusAdded = body.totalBonus !== undefined && Number(body.totalBonus) > (oldUser.totalBonus || 0);
+    const addedAmount = isBonusAdded ? (Number(body.totalBonus) - (oldUser.totalBonus || 0)) : 0;
+
     const updatedUser = await User.findByIdAndUpdate(id, body, { new: true });
     
     if (!updatedUser) {
-      return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
+      return NextResponse.json({ success: false, message: "Internal update error" }, { status: 500 });
+    }
+
+    // Send email if bonus was added
+    if (isBonusAdded) {
+      try {
+        await sendBonusEmail(updatedUser.email, addedAmount);
+      } catch (emailErr) {
+        console.error("Failed to send bonus email:", emailErr);
+        // We don't fail the whole request if email fails, but we log it
+      }
     }
     
     // Do not return password hash

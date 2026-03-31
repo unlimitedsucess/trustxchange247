@@ -32,6 +32,7 @@ export async function GET(req: Request) {
     let totalInvested = 0;
     let totalProfit = 0;
     let activeInvestments = 0;
+    let totalDepositBonus = 0;
 
     deposits.forEach((dep) => {
       if (dep.status === "active" || dep.status === "pending" || dep.status === "completed") {
@@ -39,9 +40,12 @@ export async function GET(req: Request) {
       }
       if (dep.status === "active") activeInvestments += 1;
       
-      if (dep.currentBalance > dep.amount) {
-        totalProfit += (dep.currentBalance - dep.amount);
+      const currentVal = dep.currentBalance || dep.amount;
+      if (currentVal > dep.amount) {
+        totalProfit += (currentVal - dep.amount);
       }
+      
+      if (dep.bonus) totalDepositBonus += dep.bonus;
     });
 
     let totalWithdrawn = 0;
@@ -52,9 +56,9 @@ export async function GET(req: Request) {
       if (w.status === "pending") pendingWithdrawals += w.amount;
     });
 
-    const totalBonus = userObj?.totalBonus || 0;
+    const totalBonus = (userObj?.totalBonus || 0) + totalDepositBonus;
 
-    // withdrawableBalance includes profit + completed investments + bonus minus withdrawals
+    // withdrawableBalance includes profit + bonus + completed investments minus withdrawals
     const withdrawableBalance = totalProfit + totalBonus + deposits.filter(d => d.status === "completed").reduce((sum, d) => sum + d.amount, 0) - totalWithdrawn - pendingWithdrawals;
 
     const recentInvestments = deposits.map(dep => ({

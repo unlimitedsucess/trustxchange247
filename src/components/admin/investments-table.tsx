@@ -19,12 +19,15 @@ import {
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { Input } from "@/components/ui/input"
 
 export function InvestmentsTable() {
   const [investments, setInvestments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editStatus, setEditStatus] = useState("")
+  const [editRoi, setEditRoi] = useState<number>(0)
+  const [editBonus, setEditBonus] = useState<number>(0)
   const { toast } = useToast()
   
   const token = useSelector((state: RootState) => state.token.token)
@@ -45,6 +48,7 @@ export function InvestmentsTable() {
             startDate: inv.startDate ? new Date(inv.startDate).toLocaleDateString() : "Pending",
             endDate: inv.endDate ? new Date(inv.endDate).toLocaleDateString() : "Pending",
             roi: inv.roi || 0,
+            bonus: inv.bonus || 0,
             currentValue: inv.currentBalance || inv.amount,
             status: inv.status === "active" ? "Active" : inv.status === "completed" ? "Completed" : "Pending"
           }))
@@ -64,6 +68,8 @@ export function InvestmentsTable() {
     if (investment) {
       setEditingId(id)
       setEditStatus(investment.status.toLowerCase())
+      setEditRoi(investment.roi)
+      setEditBonus(investment.bonus || 0)
     }
   }
 
@@ -73,15 +79,15 @@ export function InvestmentsTable() {
         const res = await fetch(`/api/admin/deposits/${editingId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ status: editStatus })
+          body: JSON.stringify({ status: editStatus, roi: editRoi, bonus: editBonus })
         })
         if (res.ok) {
           
-          setInvestments(investments.map((inv) => (inv.id === editingId ? { ...inv, status: editStatus === "active" ? "Active" : "Completed" } : inv)))
+          setInvestments(investments.map((inv) => (inv.id === editingId ? { ...inv, status: editStatus === "active" ? "Active" : editStatus === "completed" ? "Completed" : "Pending", roi: editRoi, bonus: editBonus } : inv)))
           
           toast({
             title: "Success",
-            description: "Investment strictly updated successfully",
+            description: "Investment updated successfully",
           })
         }
       } catch (err) {
@@ -183,7 +189,7 @@ export function InvestmentsTable() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Investment</DialogTitle>
-            <DialogDescription>Update investment status</DialogDescription>
+            <DialogDescription>Update investment details, ROI and bonuses</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -194,10 +200,32 @@ export function InvestmentsTable() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="roi">ROI Percentage (%)</Label>
+              <Input
+                id="roi"
+                type="number"
+                value={editRoi}
+                onChange={(e) => setEditRoi(Number(e.target.value))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bonus" className="text-primary font-bold">Extra Bonus ($)</Label>
+              <Input
+                id="bonus"
+                type="number"
+                value={editBonus}
+                onChange={(e) => setEditBonus(Number(e.target.value))}
+                className="border-primary"
+              />
             </div>
           </div>
 

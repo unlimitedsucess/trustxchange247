@@ -3,21 +3,25 @@ import { connectDB } from "@/lib/db";
 import Deposit from "@/models/deposit";
 import User from "@/models/user";
 import InvestmentPlan from "@/models/investmentPlan";
-import { sendDepositApprovalEmail } from "@/lib/email";
+import { sendDepositApprovalEmail, sendBonusEmail } from "@/lib/email";
 
 // PUT /api/admin/deposits/[id]/approve  or just general status update
 export async function PUT(req: Request, props: { params: Promise<{ id: string }> }) {
   try {
     await connectDB();
     const { id } = await props.params;
-    const { status } = await req.json(); // status can be "active", "completed", "rejected"
+    const body = await req.json();
+    const { status, roi, bonus } = body; // status can be "active", "completed", "rejected"
     
-    const depositToUpdate = await Deposit.findById(id);
+    const depositToUpdate = await Deposit.findById(id).populate("user");
     if (!depositToUpdate) {
       return NextResponse.json({ success: false, message: "Deposit not found" }, { status: 404 });
     }
 
-    let updates: any = { status };
+    let updates: any = {};
+    if (status) updates.status = status;
+    if (roi !== undefined) updates.roi = Number(roi);
+    if (bonus !== undefined) updates.bonus = Number(bonus);
     
     // Only calculate start and end dates if we are freshly moving to 'active'
     if (status === "active" && depositToUpdate.status !== "active") {
@@ -25,11 +29,16 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
       
       const planObj = await InvestmentPlan.findOne({ name: depositToUpdate.plan });
       if (planObj && planObj.durationDays) {
-        const endDate = new Date();
+        const endDate = new Date(updates.startDate);
         endDate.setDate(endDate.getDate() + planObj.durationDays);
         updates.endDate = endDate;
       }
     }
+
+    // Check if bonus was added
+    const oldBonus = depositToUpdate.bonus || 0;
+    const isBonusAdded = bonus !== undefined && Number(bonus) > oldBonus;
+    const addedAmount = isBonusAdded ? (Number(bonus) - oldBonus) : 0;
 
     const updatedDeposit = await Deposit.findByIdAndUpdate(
       id, 

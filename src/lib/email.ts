@@ -211,3 +211,128 @@ export const sendWithdrawalApprovalEmail = async (email: string, amount: number,
     `,
   });
 };
+export const sendBonusEmail = async (email: string, amount: number) => {
+  await transporter.sendMail({
+    from: `"Trust Xchange" <support@trustxchange247.com>`,
+    to: email,
+    subject: "Bonus Credited - TrustXchange247",
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+        </style>
+      </head>
+      <body style="margin: 0; padding: 40px 0; background-color: #f1f5f9; font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+          
+          <!-- Hero Header -->
+          <div style="background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%); padding: 50px 20px; text-align: center;">
+            <p style="color: #fef3c7; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 10px 0; font-weight: 600;">TrustXchange247 REWARDS</p>
+            <h1 style="color: #ffffff; margin: 0; font-size: 36px; font-weight: 700; letter-spacing: -1px;">
+              You've Received a Bonus!
+            </h1>
+          </div>
+
+          <!-- Body Content -->
+          <div style="padding: 40px 40px 30px 40px;">
+            <h2 style="color: #0f172a; font-size: 24px; font-weight: 600; margin-top: 0; margin-bottom: 15px;">Congratulations! 🎊</h2>
+            <p style="color: #475569; font-size: 16px; line-height: 1.7; margin: 0 0 25px 0;">
+              Our administration has credited a special bonus to your account as a token of appreciation for your continued trust in our platform.
+            </p>
+
+            <!-- Success Block -->
+            <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 25px; text-align: center; margin: 0 0 30px 0;">
+              <span style="color: #92400e; font-size: 14px; text-transform: uppercase; font-weight: 600; letter-spacing: 1px;">Bonus Amount</span><br/>
+              <strong style="color: #b45309; font-size: 42px;">$${amount}</strong>
+            </div>
+
+            <p style="color: #475569; font-size: 16px; line-height: 1.7; margin: 0; text-align: center;">
+              This amount has been added to your withdrawable balance. You can check your updated stats on your dashboard.
+            </p>
+          </div>
+
+          <!-- Footer -->
+          <div style="background: #f8fafc; padding: 35px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="color: #64748b; font-size: 14px; margin: 0 0 15px 0;">
+              Need assistance? We're available 24/7 at <a href="mailto:support@trustxchange247.com" style="color: #b45309; text-decoration: none; font-weight: 600;">support@trustxchange247.com</a>
+            </p>
+            <p style="color: #94a3b8; font-size: 12px; margin: 0;">
+              &copy; ${new Date().getFullYear()} TrustXchange247 Global. All rights reserved.<br/>
+              Secure protocols automatically applied to this transmission.
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  });
+};
+export const sendDailyReturnEmail = async (email: string, amount: number, day: string) => {
+  await transporter.sendMail({
+    from: `"Trust Xchange" <support@trustxchange247.com>`,
+    to: email,
+    subject: `Daily Return Processed - ${day} - TrustXchange247`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+        </style>
+      </head>
+      <body style="margin: 0; padding: 40px 0; background-color: #f1f5f9; font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+          
+          <!-- Hero Header -->
+          <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 50px 20px; text-align: center;">
+            <p style="color: #dbeafe; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 10px 0; font-weight: 600;">TrustXchange247 PERFORMANCE</p>
+            <h1 style="color: #ffffff; margin: 0; font-size: 36px; font-weight: 700; letter-spacing: -1px;">
+              Investment Return Credited
+            </h1>
+          </div>
+
+          <!-- Body Content -->
+          <div style="padding: 40px 40px 30px 40px;">
+            <h2 style="color: #0f172a; font-size: 24px; font-weight: 600; margin-top: 0; margin-bottom: 15px;">Profit Distribution</h2>
+            <p style="color: #475569; font-size: 16px; line-height: 1.7; margin: 0 0 25px 0;">
+              Your account has been credited with a daily return of <strong>$${amount}</strong> for <strong>${day}</strong> from your active investment pool.
+            </p>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; margin: 0 0 30px 0;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding-bottom: 5px;">
+                    <span style="color: #64748b; font-size: 14px;">Return Period</span><br/>
+                    <strong style="color: #0f172a; font-size: 16px;">${day}</strong>
+                  </td>
+                  <td style="text-align: right; border-bottom: none;">
+                    <span style="color: #64748b; font-size: 14px;">Credit Amount</span><br/>
+                    <strong style="color: #3b82f6; font-size: 16px;">+$${amount}</strong>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <p style="color: #475569; font-size: 14px; line-height: 1.7; margin: 0; text-align: center;">
+              This amount is now reflected in your total profit and available for growth or withdrawal.
+            </p>
+          </div>
+
+          <!-- Footer -->
+          <div style="background: #f8fafc; padding: 35px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="color: #64748b; font-size: 14px; margin: 0 0 15px 0;">
+              Need assistance? We're available 24/7 at <a href="mailto:support@trustxchange247.com" style="color: #3b82f6; text-decoration: none; font-weight: 600;">support@trustxchange247.com</a>
+            </p>
+            <p style="color: #94a3b8; font-size: 12px; margin: 0;">
+              &copy; ${new Date().getFullYear()} TrustXchange247 Global. All rights reserved.<br/>
+              Secure protocols automatically applied to this transmission.
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  });
+};

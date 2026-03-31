@@ -8,6 +8,7 @@ const depositSchema = new mongoose.Schema({
   roi: { type: Number, default: 0 }, // % ROI per interval (daily/weekly)
   currentBalance: { type: Number, default: 0 }, // invested + accrued ROI
   status: { type: String, enum: ["pending", "active", "completed"], default: "pending" },
+  bonus: { type: Number, default: 0 },
   startDate: { type: Date }, // when admin approves
   endDate: { type: Date },   // empty until approved
 }, { timestamps: true });

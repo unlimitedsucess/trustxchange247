@@ -172,8 +172,7 @@ export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) 
                 <Input id="transactionPin" name="transactionPin" value={formData.transactionPin || ""} onChange={handleChange} placeholder="PIN" />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="totalBonus" className="text-primary font-bold">Total Bonus ($)</Label>
-                <Input id="totalBonus" name="totalBonus" type="number" value={formData.totalBonus} onChange={handleChange} className="border-primary" />
+                {/* Global Bonus removed - handled per investment now */}
             </div>
           </div>
 
