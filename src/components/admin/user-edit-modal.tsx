@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
+import { Loader2 } from "lucide-react"
 
 interface UserEditModalProps {
   user: {

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
-import { Edit2 } from "lucide-react"
+import { Edit2, Loader2 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input"
 export function InvestmentsTable() {
   const [investments, setInvestments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editStatus, setEditStatus] = useState("")
   const [editRoi, setEditRoi] = useState<number>(0)
@@ -111,6 +112,7 @@ export function InvestmentsTable() {
 
   const handleSaveEdit = async () => {
     if (editingId) {
+      setIsSaving(true)
       try {
         const res = await fetch(`/api/admin/deposits/${editingId}`, {
           method: "PUT",
@@ -130,13 +132,14 @@ export function InvestmentsTable() {
         }
           
         setInvestments(investments.map((inv) => (inv.id === editingId ? { ...inv, status: editStatus === "active" ? "Active" : editStatus === "completed" ? "Completed" : "Pending", roi: editRoi, bonus: editBonus } : inv)))
-        
         toast({ title: "Successfully Applied", description: `${stagedReturns.length} earning logs pushed to active ledger.` })
       } catch (err) {
         toast({ title: "Error", description: "Operation failed", variant: "destructive" })
+      } finally {
+        setIsSaving(false);
+        setEditingId(null)
+        setEditStatus("")
       }
-      setEditingId(null)
-      setEditStatus("")
     }
   }
 
@@ -217,7 +220,7 @@ export function InvestmentsTable() {
             <div className="grid grid-cols-2 gap-4 border p-4 rounded-xl bg-muted/10">
                 <div className="space-y-2">
                     <Label htmlFor="status">Trade Status</Label>
-                    <Select value={editStatus} onValueChange={setEditStatus}>
+                    <Select value={editStatus} onValueChange={setEditStatus} disabled={isSaving}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="pending">Pending</SelectItem>
@@ -228,7 +231,7 @@ export function InvestmentsTable() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="roi">Current Daily ROI (%)</Label>
-                    <Input id="roi" type="number" value={editRoi} onChange={(e) => setEditRoi(Number(e.target.value))} />
+                    <Input id="roi" type="number" value={editRoi} onChange={(e) => setEditRoi(Number(e.target.value))} disabled={isSaving} />
                 </div>
             </div>
 
@@ -244,7 +247,7 @@ export function InvestmentsTable() {
                           {stagedReturns.map((r, i) => (
                               <div key={i} className="flex items-center justify-between bg-background p-2 rounded border text-xs">
                                   <span><Badge variant="outline" className={r.type === 'bonus' ? 'text-primary' : ''}>{r.type === 'bonus' ? 'Bonus' : 'ROI'}</Badge> <b>${r.amount.toFixed(2)}</b> ({r.displayLabel})</span>
-                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setStagedReturns(stagedReturns.filter((_, idx) => idx !== i))}>×</Button>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setStagedReturns(stagedReturns.filter((_, idx) => idx !== i))} disabled={isSaving}>×</Button>
                               </div>
                           ))}
                       </div>
@@ -253,7 +256,7 @@ export function InvestmentsTable() {
                   <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
                           <Label className="text-[10px]">Log Type</Label>
-                          <Select value={returnInput.type} onValueChange={(v: any) => setReturnInput({...returnInput, type: v, value: ""})}>
+                          <Select value={returnInput.type} onValueChange={(v: any) => setReturnInput({...returnInput, type: v, value: ""})} disabled={isSaving}>
                               <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                               <SelectContent>
                                   <SelectItem value="interest">ROI (Percentage %)</SelectItem>
@@ -269,6 +272,7 @@ export function InvestmentsTable() {
                             onChange={(e) => setReturnInput({...returnInput, value: e.target.value})} 
                             placeholder={returnInput.type === "interest" ? "e.g. 5" : "e.g. 100"}
                             className="h-8 text-xs" 
+                            disabled={isSaving}
                           />
                       </div>
                       <div className="space-y-1 col-span-2 bg-background/50 p-2 rounded text-[10px] flex justify-between items-center border">
@@ -279,21 +283,23 @@ export function InvestmentsTable() {
                       </div>
                       <div className="space-y-1">
                           <Label className="text-[10px]">Label (e.g. Day 1 ROI)</Label>
-                          <Input value={returnInput.day} onChange={(e) => setReturnInput({...returnInput, day: e.target.value})} className="h-8 text-xs" />
+                          <Input value={returnInput.day} onChange={(e) => setReturnInput({...returnInput, day: e.target.value})} className="h-8 text-xs" disabled={isSaving} />
                       </div>
                       <div className="space-y-1">
                           <Label className="text-[10px]">Wallet Entry Date</Label>
-                          <Input type="date" value={returnInput.date} onChange={(e) => setReturnInput({...returnInput, date: e.target.value})} className="h-8 text-xs" />
+                          <Input type="date" value={returnInput.date} onChange={(e) => setReturnInput({...returnInput, date: e.target.value})} className="h-8 text-xs" disabled={isSaving} />
                       </div>
                   </div>
-                  <Button variant="secondary" size="sm" className="w-full mt-2 h-8" onClick={addStagedReturn}>+ Stage Earning Log</Button>
+                  <Button variant="secondary" size="sm" className="w-full mt-2 h-8" onClick={addStagedReturn} disabled={isSaving}>+ Stage Earning Log</Button>
               </div>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingId(null)}>Cancel</Button>
-            <Button onClick={handleSaveEdit} className="bg-primary text-primary-foreground font-bold px-8">Push All To History</Button>
+            <Button variant="outline" onClick={() => setEditingId(null)} disabled={isSaving}>Cancel</Button>
+            <Button onClick={handleSaveEdit} className="bg-primary text-primary-foreground font-bold px-8 min-w-[150px]" disabled={isSaving}>
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Push All To History"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

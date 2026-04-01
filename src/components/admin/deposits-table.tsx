@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
-import { CheckCircle, XCircle, Trash2 } from "lucide-react"
+import { CheckCircle, XCircle, Trash2, Loader2 } from "lucide-react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
 import {
@@ -27,6 +27,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function DepositsTable() {
   const [deposits, setDeposits] = useState<any[]>([])
@@ -35,6 +36,7 @@ export function DepositsTable() {
   const [editBonus, setEditBonus] = useState<number>(0)
   const [confirmingAction, setConfirmingAction] = useState<"approve" | "reject" | "delete" | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isActionLoading, setIsActionLoading] = useState(false)
   const { toast } = useToast()
   
   const token = useSelector((state: RootState) => state.token.token)
@@ -67,6 +69,7 @@ export function DepositsTable() {
   }, [token])
 
   const handleApprove = async (id: string) => {
+    setIsActionLoading(true)
     try {
       const res = await fetch(`/api/admin/deposits/${id}`, {
         method: "PUT",
@@ -76,15 +79,18 @@ export function DepositsTable() {
       if (res.ok) {
         setDeposits(deposits.map((d) => (d.id === id ? { ...d, status: "Approved" } : d)))
         toast({ title: "Success", description: "Deposit approved with ROI & Bonus" })
+        setEditingId(null)
+        setConfirmingAction(null)
       }
     } catch (err) {
       toast({ title: "Error", description: "Failed to approve deposit", variant: "destructive" })
+    } finally {
+      setIsActionLoading(false)
     }
-    setEditingId(null)
-    setConfirmingAction(null)
   }
 
   const handleReject = async (id: string) => {
+    setIsActionLoading(true)
     try {
       const res = await fetch(`/api/admin/deposits/${id}`, {
         method: "PUT",
@@ -94,15 +100,18 @@ export function DepositsTable() {
       if (res.ok) {
         setDeposits(deposits.map((d) => (d.id === id ? { ...d, status: "Rejected" } : d)))
         toast({ title: "Success", description: "Deposit rejected successfully", variant: "destructive" })
+        setEditingId(null)
+        setConfirmingAction(null)
       }
     } catch (err) {
       toast({ title: "Error", description: "Failed to reject deposit", variant: "destructive" })
+    } finally {
+      setIsActionLoading(false)
     }
-    setEditingId(null)
-    setConfirmingAction(null)
   }
 
   const handleDelete = async (id: string) => {
+    setIsActionLoading(true)
     try {
       const res = await fetch(`/api/admin/deposits/${id}`, {
         method: "DELETE",
@@ -111,22 +120,21 @@ export function DepositsTable() {
       if (res.ok) {
         setDeposits(deposits.filter((d) => d.id !== id))
         toast({ title: "Success", description: "Deposit deleted permanently" })
+        setEditingId(null)
+        setConfirmingAction(null)
       }
     } catch (err) {
       toast({ title: "Error", description: "Failed to delete deposit", variant: "destructive" })
+    } finally {
+      setIsActionLoading(false)
     }
-    setEditingId(null)
-    setConfirmingAction(null)
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Approved":
-        return "bg-success text-success-foreground"
-      case "Rejected":
-        return "bg-destructive text-destructive-foreground"
-      default:
-        return "bg-warning text-warning-foreground"
+      case "Approved": return "bg-success text-success-foreground"
+      case "Rejected": return "bg-destructive text-destructive-foreground"
+      default: return "bg-warning text-warning-foreground"
     }
   }
 
@@ -151,9 +159,11 @@ export function DepositsTable() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">Loading deposits...</td>
-                  </tr>
+                   Array.from({ length: 4 }).map((_, idx) => (
+                    <tr key={idx} className="border-b border-border">
+                      <td colSpan={6} className="py-4 px-4"><Skeleton className="h-10 w-full" /></td>
+                    </tr>
+                  ))
                 ) : deposits.length > 0 ? (
                   deposits.map((deposit) => (
                     <tr key={deposit.id} className="border-b border-border hover:bg-muted/50">
@@ -235,6 +245,7 @@ export function DepositsTable() {
                 type="number"
                 value={editRoi}
                 onChange={(e) => setEditRoi(Number(e.target.value))}
+                disabled={isActionLoading}
               />
             </div>
 
@@ -246,12 +257,15 @@ export function DepositsTable() {
                 value={editBonus}
                 onChange={(e) => setEditBonus(Number(e.target.value))}
                 className="border-primary"
+                disabled={isActionLoading}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingId(null)}>Cancel</Button>
-            <Button onClick={() => handleApprove(editingId!)}>Approve & Set Yield</Button>
+            <Button variant="outline" onClick={() => setEditingId(null)} disabled={isActionLoading}>Cancel</Button>
+            <Button onClick={() => handleApprove(editingId!)} disabled={isActionLoading} className="min-w-[150px]">
+                {isActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Approve & Set Yield"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -271,19 +285,19 @@ export function DepositsTable() {
           </AlertDialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel asChild>
-                <Button variant="outline">Cancel</Button>
+                <Button variant="outline" disabled={isActionLoading}>Cancel</Button>
             </AlertDialogCancel>
-            <AlertDialogAction asChild>
-                <Button 
-                    variant="destructive"
-                    onClick={() => {
-                        if (editingId && confirmingAction === "reject") handleReject(editingId)
-                        if (editingId && confirmingAction === "delete") handleDelete(editingId)
-                    }}
-                >
-                    {confirmingAction === "reject" ? "Reject" : "Delete"}
-                </Button>
-            </AlertDialogAction>
+            <Button 
+                variant="destructive"
+                disabled={isActionLoading}
+                className="min-w-[100px]"
+                onClick={() => {
+                    if (editingId && confirmingAction === "reject") handleReject(editingId)
+                    if (editingId && confirmingAction === "delete") handleDelete(editingId)
+                }}
+            >
+                {isActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : confirmingAction === "reject" ? "Reject" : "Delete"}
+            </Button>
           </DialogFooter>
         </AlertDialogContent>
       </AlertDialog>
