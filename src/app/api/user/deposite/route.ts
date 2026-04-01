@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Deposit from "@/models/deposit";
+import DailyReturn from "@/models/dailyReturn";
 import { verifyToken } from "@/lib/auth";
 import mongoose from "mongoose";
-
 import InvestmentPlan from "@/models/investmentPlan";
 
 export async function POST(req: NextRequest) {
@@ -14,7 +14,6 @@ export async function POST(req: NextRequest) {
     const { plan, wallet, amount } = await req.json();
     const numericAmount = Number(amount);
 
-    // Validate inputs
     if (!plan) return NextResponse.json({ message: "Plan is required." }, { status: 400 });
     if (!wallet) return NextResponse.json({ message: "Wallet is required." }, { status: 400 });
     if (!amount || numericAmount <= 0) return NextResponse.json({ message: "Amount must be greater than 0." }, { status: 400 });
@@ -24,7 +23,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Invalid or inactive plan selected." }, { status: 400 });
     }
 
-    // Check minAmount dynamically from database
     if (numericAmount < planDetails.minInvestment) {
       return NextResponse.json(
         { message: `Amount is below the minimum for ${plan}: $${planDetails.minInvestment}` },
@@ -32,7 +30,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check maxAmount dynamically from database
     if (planDetails.maxInvestment && numericAmount > planDetails.maxInvestment) {
       return NextResponse.json(
         { message: `Amount exceeds the limit for ${plan}. Maximum allowed: $${planDetails.maxInvestment}` },
@@ -40,7 +37,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create deposit
     const deposit = await Deposit.create({
       user: new mongoose.Types.ObjectId(user.userId),
       plan,
@@ -59,16 +55,10 @@ export async function POST(req: NextRequest) {
     );
 
   } catch (err: any) {
-    console.error("Deposit API error:", err.message);
-
     if (err.message === "No token provided" || err.message === "Invalid token") {
       return NextResponse.json({ message: err.message }, { status: 401 });
     }
-
-    return NextResponse.json(
-      { message: "Internal server error", errors: [err.message] },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Internal server error", errors: [err.message] }, { status: 500 });
   }
 }
 
@@ -77,16 +67,45 @@ export async function GET(req: NextRequest) {
     await connectDB();
     const user = verifyToken(req);
 
-    const deposits = await Deposit.find({ user: user.userId }).sort({ createdAt: -1 });
+    const [deposits, manualReturns] = await Promise.all([
+      Deposit.find({ user: user.userId }).sort({ createdAt: -1 }),
+      DailyReturn.find({ user: user.userId })
+    ]);
 
-    return NextResponse.json({ deposits }, { status: 200 });
+    const now = new Date();
+
+    const transformedDeposits = deposits.map(dep => {
+      let growth = 0;
+      
+      // Auto ROI calculation
+      if (dep.status === "active" && dep.startDate && dep.roi) {
+        const start = new Date(dep.startDate);
+        const diffTime = Math.max(0, now.getTime() - start.getTime());
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 0) {
+          growth += (dep.amount * (dep.roi / 100) * diffDays);
+        }
+      }
+
+      // Manual ROI logs
+      const manualForThis = manualReturns
+        .filter(mr => mr.investment?.toString() === dep._id.toString() && mr.type !== 'bonus')
+        .reduce((sum, mr) => sum + mr.amount, 0);
+
+      growth += manualForThis;
+
+      const obj = dep.toObject();
+      return {
+        ...obj,
+        currentBalance: dep.amount + growth // Dynamically update balance for UI
+      };
+    });
+
+    return NextResponse.json({ deposits: transformedDeposits }, { status: 200 });
   } catch (err: any) {
-    console.error("Fetch Deposits API error:", err.message);
-
     if (err.message === "No token provided" || err.message === "Invalid token") {
       return NextResponse.json({ message: err.message }, { status: 401 });
     }
-
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }
