@@ -29,7 +29,13 @@ export function InvestmentsTable() {
   const [editRoi, setEditRoi] = useState<number>(0)
   const [editBonus, setEditBonus] = useState<number>(0)
   const [stagedReturns, setStagedReturns] = useState<any[]>([])
-  const [returnInput, setReturnInput] = useState({ amount: "", day: "", date: new Date().toISOString().split("T")[0], type: "interest" as "interest" | "bonus" })
+  const [activeInvestmentAmount, setActiveInvestmentAmount] = useState<number>(0)
+  const [returnInput, setReturnInput] = useState({ 
+    value: "", 
+    day: "", 
+    date: new Date().toISOString().split("T")[0], 
+    type: "interest" as "interest" | "bonus" 
+  })
   const [targetUserId, setTargetUserId] = useState<string | null>(null)
   const { toast } = useToast()
   
@@ -66,26 +72,41 @@ export function InvestmentsTable() {
     if (token) fetchInvestments()
   }, [token])
 
+  const getCalculatedAmount = () => {
+    const val = Number(returnInput.value) || 0;
+    if (returnInput.type === "interest") {
+        return (val / 100) * activeInvestmentAmount;
+    }
+    return val;
+  }
+
   const handleEdit = (id: string) => {
     const investment = investments.find((inv) => inv.id === id)
     if (investment) {
       setEditingId(id)
       setTargetUserId(investment.userId)
+      setActiveInvestmentAmount(investment.amountInvested)
       setEditStatus(investment.status.toLowerCase())
       setEditRoi(investment.roi)
       setEditBonus(investment.bonus || 0)
       setStagedReturns([])
-      setReturnInput({ amount: "", day: "", date: new Date().toISOString().split("T")[0], type: "interest" })
+      setReturnInput({ value: "", day: "", date: new Date().toISOString().split("T")[0], type: "interest" })
     }
   }
 
   const addStagedReturn = () => {
-    if (!returnInput.amount || !returnInput.day) {
-        toast({ title: "Validation", description: "Please enter amount and label", variant: "destructive" });
+    if (!returnInput.value || !returnInput.day) {
+        toast({ title: "Validation", description: "Please enter percentage/amount and label", variant: "destructive" });
         return;
     }
-    setStagedReturns([...stagedReturns, { ...returnInput, investmentId: editingId }]);
-    setReturnInput({ ...returnInput, amount: "", day: "" });
+    const finalAmount = getCalculatedAmount();
+    setStagedReturns([...stagedReturns, { 
+        ...returnInput, 
+        amount: finalAmount, 
+        investmentId: editingId,
+        displayLabel: returnInput.type === "interest" ? `${returnInput.value}% of $${activeInvestmentAmount}` : `$${returnInput.value}`
+    }]);
+    setReturnInput({ ...returnInput, value: "", day: "" });
   }
 
   const handleSaveEdit = async () => {
@@ -189,7 +210,7 @@ export function InvestmentsTable() {
         <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Management & Performance Ledger</DialogTitle>
-            <DialogDescription>Submit bulk earnings history and update active trade yield.</DialogDescription>
+            <DialogDescription>Stage dynamic earnings for <b>${activeInvestmentAmount.toLocaleString()}</b> capital.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
@@ -222,7 +243,7 @@ export function InvestmentsTable() {
                       <div className="space-y-2 mb-4">
                           {stagedReturns.map((r, i) => (
                               <div key={i} className="flex items-center justify-between bg-background p-2 rounded border text-xs">
-                                  <span><Badge variant="outline" className={r.type === 'bonus' ? 'text-primary' : ''}>{r.type === 'bonus' ? 'Bonus' : 'Int.'}</Badge> <b>${r.amount}</b> ({r.day}) - {r.date}</span>
+                                  <span><Badge variant="outline" className={r.type === 'bonus' ? 'text-primary' : ''}>{r.type === 'bonus' ? 'Bonus' : 'ROI'}</Badge> <b>${r.amount.toFixed(2)}</b> ({r.displayLabel})</span>
                                   <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setStagedReturns(stagedReturns.filter((_, idx) => idx !== i))}>×</Button>
                               </div>
                           ))}
@@ -232,20 +253,32 @@ export function InvestmentsTable() {
                   <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
                           <Label className="text-[10px]">Log Type</Label>
-                          <Select value={returnInput.type} onValueChange={(v: any) => setReturnInput({...returnInput, type: v})}>
+                          <Select value={returnInput.type} onValueChange={(v: any) => setReturnInput({...returnInput, type: v, value: ""})}>
                               <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                               <SelectContent>
-                                  <SelectItem value="interest">ROI / Interest</SelectItem>
-                                  <SelectItem value="bonus">Special Bonus</SelectItem>
+                                  <SelectItem value="interest">ROI (Percentage %)</SelectItem>
+                                  <SelectItem value="bonus">Fixed Bonus ($)</SelectItem>
                               </SelectContent>
                           </Select>
                       </div>
                       <div className="space-y-1">
-                          <Label className="text-[10px]">Amount ($)</Label>
-                          <Input type="number" value={returnInput.amount} onChange={(e) => setReturnInput({...returnInput, amount: e.target.value})} className="h-8 text-xs" />
+                          <Label className="text-[10px]">{returnInput.type === "interest" ? "ROI %" : "Bonus $"}</Label>
+                          <Input 
+                            type="number" 
+                            value={returnInput.value} 
+                            onChange={(e) => setReturnInput({...returnInput, value: e.target.value})} 
+                            placeholder={returnInput.type === "interest" ? "e.g. 5" : "e.g. 100"}
+                            className="h-8 text-xs" 
+                          />
+                      </div>
+                      <div className="space-y-1 col-span-2 bg-background/50 p-2 rounded text-[10px] flex justify-between items-center border">
+                          <span className="text-muted-foreground uppercase font-bold text-[9px]">Calculated Credit:</span>
+                          <span className="font-bold text-primary">
+                            ${getCalculatedAmount().toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </span>
                       </div>
                       <div className="space-y-1">
-                          <Label className="text-[10px]">Label (e.g. Monday ROI)</Label>
+                          <Label className="text-[10px]">Label (e.g. Day 1 ROI)</Label>
                           <Input value={returnInput.day} onChange={(e) => setReturnInput({...returnInput, day: e.target.value})} className="h-8 text-xs" />
                       </div>
                       <div className="space-y-1">
