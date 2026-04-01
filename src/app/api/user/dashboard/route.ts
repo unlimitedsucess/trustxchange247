@@ -26,11 +26,10 @@ export async function GET(req: Request) {
       Deposit.find({ user: userId }),
       Withdrawal.find({ user: userId }),
       User.findById(userId).select("fullName email transactionPin totalBonus"),
-      DailyReturn.find({ user: userId }).sort({ createdAt: -1 })
+      DailyReturn.find({ user: userId }).sort({ date: -1, createdAt: -1 })
     ]);
 
     let totalInvested = 0;
-    let totalProfit = 0;
     let activeInvestments = 0;
     let totalDepositBonus = 0;
 
@@ -39,27 +38,29 @@ export async function GET(req: Request) {
         totalInvested += dep.amount;
       }
       if (dep.status === "active") activeInvestments += 1;
-      
-      const currentVal = dep.currentBalance || dep.amount;
-      if (currentVal > dep.amount) {
-        totalProfit += (currentVal - dep.amount);
-      }
-      
       if (dep.bonus) totalDepositBonus += dep.bonus;
     });
 
     let totalWithdrawn = 0;
     let pendingWithdrawals = 0;
-    
     withdrawals.forEach((w) => {
       if (w.status === "approved") totalWithdrawn += w.amount;
       if (w.status === "pending") pendingWithdrawals += w.amount;
     });
 
-    const totalBonus = (userObj?.totalBonus || 0) + totalDepositBonus;
+    let totalInterests = 0;
+    let totalBonusesFromLogs = 0;
+    dailyReturnsData.forEach((dr) => {
+        if (dr.type === "bonus") totalBonusesFromLogs += dr.amount;
+        else totalInterests += dr.amount;
+    });
 
-    // withdrawableBalance includes profit + bonus + completed investments minus withdrawals
-    const withdrawableBalance = totalProfit + totalBonus + deposits.filter(d => d.status === "completed").reduce((sum, d) => sum + d.amount, 0) - totalWithdrawn - pendingWithdrawals;
+    const totalProfit = totalInterests; 
+    const totalBonus = (userObj?.totalBonus || 0) + totalDepositBonus + totalBonusesFromLogs;
+
+    const totalWithdrawnValue = totalWithdrawn + pendingWithdrawals;
+    const completedInvestmentsValue = deposits.filter(d => d.status === "completed").reduce((sum, d) => sum + d.amount, 0);
+    const withdrawableBalance = totalProfit + totalBonus + completedInvestmentsValue - totalWithdrawnValue;
 
     const recentInvestments = deposits.map(dep => ({
       id: dep._id.toString(),
@@ -84,6 +85,7 @@ export async function GET(req: Request) {
         id: dr._id.toString(),
         amount: `$${dr.amount.toFixed(2)}`,
         day: dr.day,
+        type: dr.type || "interest",
         date: new Date(dr.date || dr.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
     }));
 

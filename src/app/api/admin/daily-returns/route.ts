@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import DailyReturn from "@/models/dailyReturn";
 import User from "@/models/user";
-import { sendDailyReturnEmail } from "@/lib/email";
+import { sendDailyReturnEmail, sendBonusEmail } from "@/lib/email";
 
 export async function GET() {
   try {
@@ -18,9 +18,11 @@ export async function POST(req: Request) {
   try {
     await connectDB();
     const body = await req.json();
-    const { userId, amount, day, date } = body;
-    if (!userId || !amount || !day) {
-        return NextResponse.json({ success: false, message: "UserId, amount and day are required" }, { status: 400 });
+    const { userId, returns } = body; 
+    // 'returns' is an array of objects: { amount, day, date, type, investmentId }
+
+    if (!userId || !Array.isArray(returns) || returns.length === 0) {
+        return NextResponse.json({ success: false, message: "UserId and an array of returns are required" }, { status: 400 });
     }
 
     const user = await User.findById(userId);
@@ -28,21 +30,37 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
     }
 
-    const newDailyReturn = await DailyReturn.create({ 
-        user: userId, 
-        amount, 
-        day, 
-        date: date ? new Date(date) : new Date() 
-    });
+    const createdReturns = [];
+    let totalInterests = 0;
+    let totalBonuses = 0;
 
-    // Send notification email
-    try {
-        await sendDailyReturnEmail(user.email, amount, day);
-    } catch (emailErr) {
-        console.error("Daily return email failed:", emailErr);
+    for (const item of returns) {
+        const nr = await DailyReturn.create({ 
+            user: userId, 
+            investment: item.investmentId || null,
+            amount: Number(item.amount), 
+            day: item.day, 
+            date: item.date ? new Date(item.date) : new Date(),
+            type: item.type || "interest"
+        });
+        createdReturns.push(nr);
+        if (item.type === "bonus") totalBonuses += Number(item.amount);
+        else totalInterests += Number(item.amount);
     }
 
-    return NextResponse.json({ success: true, data: newDailyReturn }, { status: 201 });
+    // Send notification emails (Aggregated summary)
+    try {
+        if (totalInterests > 0) {
+            await sendDailyReturnEmail(user.email, totalInterests, "Distributed Earnings");
+        }
+        if (totalBonuses > 0) {
+            await sendBonusEmail(user.email, totalBonuses);
+        }
+    } catch (err) {
+        console.error("Email notification failed", err);
+    }
+
+    return NextResponse.json({ success: true, data: createdReturns }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }

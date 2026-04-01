@@ -28,9 +28,8 @@ export function InvestmentsTable() {
   const [editStatus, setEditStatus] = useState("")
   const [editRoi, setEditRoi] = useState<number>(0)
   const [editBonus, setEditBonus] = useState<number>(0)
-  const [newDailyReturnAmount, setNewDailyReturnAmount] = useState("")
-  const [newDailyReturnDay, setNewDailyReturnDay] = useState("")
-  const [newDailyReturnDate, setNewDailyReturnDate] = useState(new Date().toISOString().split("T")[0])
+  const [stagedReturns, setStagedReturns] = useState<any[]>([])
+  const [returnInput, setReturnInput] = useState({ amount: "", day: "", date: new Date().toISOString().split("T")[0], type: "interest" as "interest" | "bonus" })
   const [targetUserId, setTargetUserId] = useState<string | null>(null)
   const { toast } = useToast()
   
@@ -51,7 +50,6 @@ export function InvestmentsTable() {
             investmentPlan: inv.plan || "N/A",
             amountInvested: inv.amount || 0,
             startDate: inv.startDate ? new Date(inv.startDate).toLocaleDateString() : "Pending",
-            endDate: inv.endDate ? new Date(inv.endDate).toLocaleDateString() : "Pending",
             roi: inv.roi || 0,
             bonus: inv.bonus || 0,
             currentValue: inv.currentBalance || inv.amount,
@@ -76,48 +74,43 @@ export function InvestmentsTable() {
       setEditStatus(investment.status.toLowerCase())
       setEditRoi(investment.roi)
       setEditBonus(investment.bonus || 0)
-      setNewDailyReturnAmount("")
-      setNewDailyReturnDay("")
-      setNewDailyReturnDate(new Date().toISOString().split("T")[0])
+      setStagedReturns([])
+      setReturnInput({ amount: "", day: "", date: new Date().toISOString().split("T")[0], type: "interest" })
     }
+  }
+
+  const addStagedReturn = () => {
+    if (!returnInput.amount || !returnInput.day) {
+        toast({ title: "Validation", description: "Please enter amount and label", variant: "destructive" });
+        return;
+    }
+    setStagedReturns([...stagedReturns, { ...returnInput, investmentId: editingId }]);
+    setReturnInput({ ...returnInput, amount: "", day: "" });
   }
 
   const handleSaveEdit = async () => {
     if (editingId) {
       try {
-        // 1. Update investment status/roi/bonus
         const res = await fetch(`/api/admin/deposits/${editingId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify({ status: editStatus, roi: editRoi, bonus: editBonus })
         })
         
-        if (!res.ok) throw new Error("Macro update failed")
+        if (!res.ok) throw new Error("Update failed")
 
-        // 2. Add Daily Return if provided
-        if (newDailyReturnAmount && newDailyReturnDay && targetUserId) {
+        if (stagedReturns.length > 0 && targetUserId) {
             const drRes = await fetch("/api/admin/daily-returns", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({
-                    userId: targetUserId,
-                    amount: Number(newDailyReturnAmount),
-                    day: newDailyReturnDay,
-                    date: newDailyReturnDate
-                })
+                body: JSON.stringify({ userId: targetUserId, returns: stagedReturns })
             })
-            if (!drRes.ok) {
-                toast({ title: "Partial Success", description: "Investment updated but return logging failed", variant: "destructive" })
-            }
+            if (!drRes.ok) throw new Error("History log failed")
         }
           
         setInvestments(investments.map((inv) => (inv.id === editingId ? { ...inv, status: editStatus === "active" ? "Active" : editStatus === "completed" ? "Completed" : "Pending", roi: editRoi, bonus: editBonus } : inv)))
         
-        toast({
-          title: "Success",
-          description: "All corrections pushed online successfully",
-        })
-
+        toast({ title: "Successfully Applied", description: `${stagedReturns.length} earning logs pushed to active ledger.` })
       } catch (err) {
         toast({ title: "Error", description: "Operation failed", variant: "destructive" })
       }
@@ -128,12 +121,9 @@ export function InvestmentsTable() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Active":
-        return "bg-success text-success-foreground"
-      case "Completed":
-        return "bg-muted text-muted-foreground"
-      default:
-        return "bg-warning text-warning-foreground"
+      case "Active": return "bg-success text-success-foreground"
+      case "Completed": return "bg-muted text-muted-foreground"
+      default: return "bg-warning text-warning-foreground"
     }
   }
 
@@ -152,7 +142,6 @@ export function InvestmentsTable() {
                   <th className="text-left py-3 px-4 font-semibold">Investment Plan</th>
                   <th className="text-right py-3 px-4 font-semibold">Amount Invested</th>
                   <th className="text-left py-3 px-4 font-semibold">Start Date</th>
-                  <th className="text-left py-3 px-4 font-semibold">End Date</th>
                   <th className="text-right py-3 px-4 font-semibold">ROI %</th>
                   <th className="text-right py-3 px-4 font-semibold">Current Value</th>
                   <th className="text-center py-3 px-4 font-semibold">Status</th>
@@ -163,15 +152,7 @@ export function InvestmentsTable() {
                 {loading ? (
                    Array.from({ length: 4 }).map((_, idx) => (
                     <tr key={idx} className="border-b border-border hover:bg-muted/50">
-                      <td className="py-4 px-4"><Skeleton className="h-5 w-32" /></td>
-                      <td className="py-4 px-4"><Skeleton className="h-5 w-24" /></td>
-                      <td className="py-4 px-4 text-right"><Skeleton className="h-5 w-20 ml-auto" /></td>
-                      <td className="py-4 px-4"><Skeleton className="h-5 w-24" /></td>
-                      <td className="py-4 px-4"><Skeleton className="h-5 w-24" /></td>
-                      <td className="py-4 px-4 text-right"><Skeleton className="h-5 w-12 ml-auto" /></td>
-                      <td className="py-4 px-4 text-right"><Skeleton className="h-5 w-24 ml-auto" /></td>
-                      <td className="py-4 px-4 text-center"><Skeleton className="h-6 w-16 mx-auto rounded-full" /></td>
-                      <td className="py-4 px-4 text-center"><Skeleton className="h-8 w-8 rounded-md mx-auto" /></td>
+                      <td colSpan={8} className="py-2 px-4"><Skeleton className="h-10 w-full" /></td>
                     </tr>
                   ))
                 ) : investments.length > 0 ? (
@@ -181,19 +162,13 @@ export function InvestmentsTable() {
                       <td className="py-3 px-4">{investment.investmentPlan}</td>
                       <td className="text-right py-3 px-4">${investment.amountInvested.toLocaleString()}</td>
                       <td className="py-3 px-4">{investment.startDate}</td>
-                      <td className="py-3 px-4">{investment.endDate}</td>
                       <td className="text-right py-3 px-4">{investment.roi}%</td>
                       <td className="text-right py-3 px-4">${investment.currentValue.toLocaleString()}</td>
                       <td className="text-center py-3 px-4">
                         <Badge className={getStatusColor(investment.status)}>{investment.status}</Badge>
                       </td>
                       <td className="text-center py-3 px-4">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEdit(investment.id)}
-                          className="h-8 w-8 p-0"
-                        >
+                        <Button size="sm" variant="ghost" onClick={() => handleEdit(investment.id)} className="h-8 w-8 p-0">
                           <Edit2 className="h-4 w-4" />
                         </Button>
                       </td>
@@ -201,9 +176,7 @@ export function InvestmentsTable() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={9} className="py-8 text-center text-muted-foreground">
-                      No active user investments found.
-                    </td>
+                    <td colSpan={8} className="py-8 text-center text-muted-foreground">No active user investments found.</td>
                   </tr>
                 )}
               </tbody>
@@ -212,100 +185,82 @@ export function InvestmentsTable() {
         </CardContent>
       </Card>
 
-      {/* Edit Modal */}
       <Dialog open={editingId !== null} onOpenChange={(open) => !open && setEditingId(null)}>
-        <DialogContent className="sm:max-w-[450px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Investment & Performance</DialogTitle>
-            <DialogDescription>Update status, ROI, bonus, and log new daily returns.</DialogDescription>
+            <DialogTitle>Management & Performance Ledger</DialogTitle>
+            <DialogDescription>Submit bulk earnings history and update active trade yield.</DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {/* Status Section */}
-            <div className="space-y-2">
-              <Label htmlFor="status">Current Status</Label>
-              <Select value={editStatus} onValueChange={setEditStatus}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Financial Adjustments Section */}
-            <div className="grid grid-cols-2 gap-4 border-t pt-4">
+          <div className="space-y-6 py-4">
+            <div className="grid grid-cols-2 gap-4 border p-4 rounded-xl bg-muted/10">
                 <div className="space-y-2">
-                    <Label htmlFor="roi">Net ROI (%)</Label>
-                    <Input
-                        id="roi"
-                        type="number"
-                        value={editRoi}
-                        onChange={(e) => setEditRoi(Number(e.target.value))}
-                        className="bg-muted/30"
-                    />
+                    <Label htmlFor="status">Trade Status</Label>
+                    <Select value={editStatus} onValueChange={setEditStatus}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="bonus" className="text-primary font-bold">Extra Bonus ($)</Label>
-                    <Input
-                        id="bonus"
-                        type="number"
-                        value={editBonus}
-                        onChange={(e) => setEditBonus(Number(e.target.value))}
-                        className="border-primary bg-primary/5"
-                    />
+                    <Label htmlFor="roi">Current Daily ROI (%)</Label>
+                    <Input id="roi" type="number" value={editRoi} onChange={(e) => setEditRoi(Number(e.target.value))} />
                 </div>
             </div>
 
-            {/* Log New Performance Section */}
-            <div className="space-y-3 border-t pt-4">
-              <Label className="text-xs font-bold uppercase text-muted-foreground tracking-wider underline">Log Individual Daily Return</Label>
-              <div className="grid grid-cols-2 gap-4 p-3 bg-muted/20 border border-dashed rounded-lg">
-                  <div className="space-y-1">
-                      <Label htmlFor="dr_amount" className="text-[10px]">Return Amount ($)</Label>
-                      <Input 
-                        id="dr_amount" 
-                        type="number" 
-                        placeholder="0.00" 
-                        value={newDailyReturnAmount}
-                        onChange={(e) => setNewDailyReturnAmount(e.target.value)}
-                        className="h-8 text-xs"
-                      />
+            <div className="space-y-4 border-t pt-4">
+              <Label className="text-secondary font-bold flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-primary animate-pulse" /> 
+                Add Earning / Bonus History
+              </Label>
+              
+              <div className="space-y-3 p-4 bg-muted/20 border border-dashed rounded-xl">
+                  {stagedReturns.length > 0 && (
+                      <div className="space-y-2 mb-4">
+                          {stagedReturns.map((r, i) => (
+                              <div key={i} className="flex items-center justify-between bg-background p-2 rounded border text-xs">
+                                  <span><Badge variant="outline" className={r.type === 'bonus' ? 'text-primary' : ''}>{r.type === 'bonus' ? 'Bonus' : 'Int.'}</Badge> <b>${r.amount}</b> ({r.day}) - {r.date}</span>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setStagedReturns(stagedReturns.filter((_, idx) => idx !== i))}>×</Button>
+                              </div>
+                          ))}
+                      </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                          <Label className="text-[10px]">Log Type</Label>
+                          <Select value={returnInput.type} onValueChange={(v: any) => setReturnInput({...returnInput, type: v})}>
+                              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                  <SelectItem value="interest">ROI / Interest</SelectItem>
+                                  <SelectItem value="bonus">Special Bonus</SelectItem>
+                              </SelectContent>
+                          </Select>
+                      </div>
+                      <div className="space-y-1">
+                          <Label className="text-[10px]">Amount ($)</Label>
+                          <Input type="number" value={returnInput.amount} onChange={(e) => setReturnInput({...returnInput, amount: e.target.value})} className="h-8 text-xs" />
+                      </div>
+                      <div className="space-y-1">
+                          <Label className="text-[10px]">Label (e.g. Monday ROI)</Label>
+                          <Input value={returnInput.day} onChange={(e) => setReturnInput({...returnInput, day: e.target.value})} className="h-8 text-xs" />
+                      </div>
+                      <div className="space-y-1">
+                          <Label className="text-[10px]">Wallet Entry Date</Label>
+                          <Input type="date" value={returnInput.date} onChange={(e) => setReturnInput({...returnInput, date: e.target.value})} className="h-8 text-xs" />
+                      </div>
                   </div>
-                  <div className="space-y-1">
-                      <Label htmlFor="dr_day" className="text-[10px]">Reference Label</Label>
-                      <Input 
-                        id="dr_day" 
-                        type="text" 
-                        placeholder="e.g. Monday" 
-                        value={newDailyReturnDay}
-                        onChange={(e) => setNewDailyReturnDay(e.target.value)}
-                        className="h-8 text-xs"
-                      />
-                  </div>
-                  <div className="space-y-1 col-span-2">
-                      <Label htmlFor="dr_date" className="text-[10px]">Actual Date</Label>
-                      <Input 
-                        id="dr_date" 
-                        type="date" 
-                        value={newDailyReturnDate}
-                        onChange={(e) => setNewDailyReturnDate(e.target.value)}
-                        className="h-8 text-xs"
-                      />
-                  </div>
+                  <Button variant="secondary" size="sm" className="w-full mt-2 h-8" onClick={addStagedReturn}>+ Stage Earning Log</Button>
               </div>
-              <p className="text-[10px] text-muted-foreground px-1 italic">Adding values here will create a separate daily return entry in user history.</p>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingId(null)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveEdit}>Process Changes</Button>
+            <Button variant="outline" onClick={() => setEditingId(null)}>Cancel</Button>
+            <Button onClick={handleSaveEdit} className="bg-primary text-primary-foreground font-bold px-8">Push All To History</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
