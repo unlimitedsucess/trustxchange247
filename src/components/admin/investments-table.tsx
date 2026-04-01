@@ -75,10 +75,8 @@ export function InvestmentsTable() {
 
   const getCalculatedAmount = () => {
     const val = Number(returnInput.value) || 0;
-    if (returnInput.type === "interest") {
-        return (val / 100) * activeInvestmentAmount;
-    }
-    return val;
+    // Both interest and bonus are now percentage-based
+    return (val / 100) * activeInvestmentAmount;
   }
 
   const handleEdit = (id: string) => {
@@ -97,7 +95,7 @@ export function InvestmentsTable() {
 
   const addStagedReturn = () => {
     if (!returnInput.value || !returnInput.day) {
-        toast({ title: "Validation", description: "Please enter percentage/amount and label", variant: "destructive" });
+        toast({ title: "Validation", description: "Please enter percentage and label", variant: "destructive" });
         return;
     }
     const finalAmount = getCalculatedAmount();
@@ -105,7 +103,7 @@ export function InvestmentsTable() {
         ...returnInput, 
         amount: finalAmount, 
         investmentId: editingId,
-        displayLabel: returnInput.type === "interest" ? `${returnInput.value}% of $${activeInvestmentAmount}` : `$${returnInput.value}`
+        displayLabel: `${returnInput.value}% of $${activeInvestmentAmount.toLocaleString()}`
     }]);
     setReturnInput({ ...returnInput, value: "", day: "" });
   }

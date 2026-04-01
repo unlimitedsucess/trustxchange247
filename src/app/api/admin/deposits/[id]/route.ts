@@ -50,7 +50,9 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
       return NextResponse.json({ success: false, message: "Deposit not found" }, { status: 404 });
     }
 
-    if (status === "active" && updatedDeposit.user?.email) {
+    const isNewlyActive = status === "active" && depositToUpdate.status !== "active";
+
+    if (isNewlyActive && updatedDeposit.user?.email) {
       try {
         await sendDepositApprovalEmail(updatedDeposit.user.email, updatedDeposit.amount, updatedDeposit.plan);
       } catch (err) {
