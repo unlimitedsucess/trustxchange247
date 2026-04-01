@@ -4,6 +4,7 @@ import Deposit from "@/models/deposit";
 import Withdrawal from "@/models/withdrawal";
 import User from "@/models/user";
 import DailyReturn from "@/models/dailyReturn";
+import InvestmentPlan from "@/models/investmentPlan";
 import { headers } from "next/headers";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
@@ -27,11 +28,12 @@ export async function GET(req: Request) {
 
     await connectDB();
 
-    const [deposits, withdrawals, userObj, allManualReturns] = await Promise.all([
+    const [deposits, withdrawals, userObj, allManualReturns, allPlans] = await Promise.all([
       Deposit.find({ user: userId }),
       Withdrawal.find({ user: userId }),
       User.findById(userId).select("fullName email transactionPin totalBonus"),
-      DailyReturn.find({ user: userId }).sort({ date: -1, createdAt: -1 })
+      DailyReturn.find({ user: userId }).sort({ date: -1, createdAt: -1 }),
+      InvestmentPlan.find({ isActive: true })
     ]);
 
     let globalAutoRoi = 0;
@@ -40,21 +42,25 @@ export async function GET(req: Request) {
     let totalDepositBonus = 0;
 
     const now = new Date();
+    const planMap = new Map(allPlans.map(p => [p.name, p.dailyRoi]));
 
     const recentInvestments = deposits.map(dep => {
+      // Use live plan ROI if available, otherwise fallback to saved ROI
+      // This fulfills "reflected everywhere until admin decides to change it"
+      const currentRoi = planMap.get(dep.plan) ?? dep.roi ?? 0;
+
       // 1. Automatic Daily Yield Growth (Mon-Fri only)
       let autoInvestmentGrowth = 0;
-      if (dep.status === "active" && dep.startDate && dep.roi) {
+      if (dep.status === "active" && dep.startDate && currentRoi) {
         const start = new Date(dep.startDate);
         const end = new Date(now);
         
         let count = 0;
         let current = new Date(start);
         
-        // Count Mon-Fri between start date and now
         while (current <= end) {
             const dayOfWeek = current.getDay();
-            if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not Sunday (0) and not Saturday (6)
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) { 
                 if (current.toDateString() !== start.toDateString()) {
                     count++;
                 }
@@ -63,7 +69,7 @@ export async function GET(req: Request) {
         }
 
         if (count > 0) {
-          autoInvestmentGrowth = (dep.amount * (dep.roi / 100) * count);
+          autoInvestmentGrowth = (dep.amount * (currentRoi / 100) * count);
         }
       }
 
@@ -90,13 +96,13 @@ export async function GET(req: Request) {
         amount: `$${dep.amount.toFixed(2)}`,
         startDate: dep.startDate ? new Date(dep.startDate).toLocaleDateString() : "Pending",
         endDate: dep.endDate ? new Date(dep.endDate).toLocaleDateString() : (dep.status === "active" ? "Ongoing" : "N/A"),
-        roi: `${dep.roi ? dep.roi : "0"}%`,
+        roi: `${currentRoi}%`,
         status: dep.status,
         growth: totalGrowth.toFixed(2)
       };
     });
 
-    // Sum all manual INTERESTS (even those not explicitly tied to an investment ID) for the total Profit card
+    // Sum all manual INTERESTS 
     let manualInterestsTotal = 0;
     let manualBonusesTotal = 0;
     allManualReturns.forEach((mr) => {

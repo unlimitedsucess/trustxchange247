@@ -67,23 +67,40 @@ export async function GET(req: NextRequest) {
     await connectDB();
     const user = verifyToken(req);
 
-    const [deposits, manualReturns] = await Promise.all([
+    const [deposits, manualReturns, plans] = await Promise.all([
       Deposit.find({ user: user.userId }).sort({ createdAt: -1 }),
-      DailyReturn.find({ user: user.userId })
+      DailyReturn.find({ user: user.userId }),
+      InvestmentPlan.find()
     ]);
 
+    const planMap = new Map(plans.map(p => [p.name, p.dailyRoi]));
     const now = new Date();
 
     const transformedDeposits = deposits.map(dep => {
       let growth = 0;
       
-      // Auto ROI calculation
-      if (dep.status === "active" && dep.startDate && dep.roi) {
+      // Auto ROI calculation using live plan rates for "reflected everywhere" behavior
+      const currentRoi = planMap.get(dep.plan) ?? dep.roi ?? 0;
+
+      if (dep.status === "active" && dep.startDate && currentRoi) {
         const start = new Date(dep.startDate);
-        const diffTime = Math.max(0, now.getTime() - start.getTime());
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        if (diffDays > 0) {
-          growth += (dep.amount * (dep.roi / 100) * diffDays);
+        const end = new Date(now);
+        
+        // Use standard weekday logic for consistency with Dashboard
+        let count = 0;
+        let current = new Date(start);
+        while (current <= end) {
+            const dayOfWeek = current.getDay();
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) { 
+                if (current.toDateString() !== start.toDateString()) {
+                    count++;
+                }
+            }
+            current.setDate(current.getDate() + 1);
+        }
+
+        if (count > 0) {
+          growth += (dep.amount * (currentRoi / 100) * count);
         }
       }
 
@@ -97,6 +114,7 @@ export async function GET(req: NextRequest) {
       const obj = dep.toObject();
       return {
         ...obj,
+        roi: currentRoi,
         currentBalance: dep.amount + growth // Dynamically update balance for UI
       };
     });
