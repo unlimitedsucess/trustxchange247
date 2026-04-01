@@ -5,6 +5,9 @@ import { usePathname } from "next/navigation"
 import { LayoutDashboard, Users, TrendingUp, LogOut, X, Wallet, CreditCard, ShieldCheck, Layers, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DarkModeToggle } from "@/components/layout/dark-mode-toggle"
+import { useDispatch } from "react-redux"
+import { tokenActions } from "@/store/token/token-slice"
+import { useRouter } from "next/navigation"
 
 interface AdminSidebarProps {
   onClose?: () => void
@@ -24,6 +27,13 @@ export function AdminSidebar({ onClose }: AdminSidebarProps) {
   ]
 
   const isActive = (href: string) => pathname === href
+  const dispatch = useDispatch()
+  const router = useRouter()
+
+  const handleLogout = () => {
+    dispatch(tokenActions.deleteToken())
+    router.push("/admin/login")
+  }
 
   return (
     <div className="flex flex-col h-full p-6">
@@ -75,7 +85,7 @@ export function AdminSidebar({ onClose }: AdminSidebarProps) {
           <DarkModeToggle />
         </div>
 
-        <Button variant="outline" className="w-full gap-2 bg-transparent mt-2" size="sm">
+        <Button variant="outline" className="w-full gap-2 bg-transparent mt-2" size="sm" onClick={handleLogout}>
           <LogOut className="h-4 w-4" />
           Logout
         </Button>

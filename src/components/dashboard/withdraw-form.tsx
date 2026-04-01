@@ -1,18 +1,23 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
 import { useHttp } from "@/hooks/use-http"
+import { Loader2, ShieldCheck } from "lucide-react"
 
-export function WithdrawForm() {
+interface WithdrawFormProps {
+  onSuccess?: () => void;
+  availableBalance?: number;
+}
+
+export function WithdrawForm({ onSuccess, availableBalance = 0 }: WithdrawFormProps) {
   const [amount, setAmount] = useState("")
   const [walletAddress, setWalletAddress] = useState("")
   const [transactionPin, setTransactionPin] = useState("")
@@ -44,7 +49,6 @@ export function WithdrawForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validation
     const withdrawAmount = Number.parseFloat(amount)
     if (!amount || withdrawAmount <= 0) {
       toast({
@@ -55,16 +59,15 @@ export function WithdrawForm() {
       return
     }
 
-    if (withdrawAmount > 5225.5) {
+    if (availableBalance > 0 && withdrawAmount > availableBalance) {
       toast({
         title: "Insufficient balance",
-        description: "Withdrawal amount exceeds your available balance",
+        description: `Max available for withdrawal: $${availableBalance.toLocaleString()}`,
         variant: "destructive",
       })
       return
     }
 
-    // Hook request execution array
     sendHttpRequest({
       requestConfig: {
         url: "/api/user/withdrawal",
@@ -82,19 +85,30 @@ export function WithdrawForm() {
         setAmount("")
         setWalletAddress("")
         setTransactionPin("")
+        if (onSuccess) onSuccess();
       }
     });
   }
 
   return (
-    <Card className="p-6 mb-8">
-      <h2 className="text-xl font-bold mb-6">Request Withdrawal</h2>
+    <Card className="p-6 border-border bg-card shadow-xl relative overflow-hidden">
+      <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+        <ShieldCheck size={100} className="text-primary" />
+      </div>
+
+      <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+        <ShieldCheck className="h-5 w-5 text-primary" />
+        Request Withdrawal
+      </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="amount">Withdrawal Amount</Label>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground font-medium">$</span>
+          <div className="flex justify-between items-center text-xs font-medium">
+             <Label htmlFor="amount">Withdrawal Amount</Label>
+             <span className="text-muted-foreground">Available: <b className="text-primary">${availableBalance.toLocaleString()}</b></span>
+          </div>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-mono font-bold">$</span>
             <Input
               id="amount"
               type="number"
@@ -103,7 +117,7 @@ export function WithdrawForm() {
               placeholder="0.00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="flex-1"
+              className="pl-8 h-11 text-lg font-bold"
               disabled={loading}
             />
           </div>
@@ -117,33 +131,43 @@ export function WithdrawForm() {
             value={walletAddress}
             onChange={(e) => setWalletAddress(e.target.value)}
             disabled={loading}
+            className="h-10"
             required
           />
+          <p className="text-[10px] text-muted-foreground italic">Funds will be sent to this address upon approval.</p>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="transactionPin">
-            {hasPin ? "Enter Transaction PIN" : "Create Transaction PIN (4-6 digits)"}
+            {hasPin ? "Authentication PIN" : "Create Transaction PIN"}
           </Label>
           <Input
             id="transactionPin"
             type="password"
             maxLength={6}
-            placeholder={hasPin ? "Enter your secure PIN" : "Create a new secure PIN"}
+            placeholder={hasPin ? "Enter your 4-6 digit PIN" : "Create a new 4-6 digit PIN"}
             value={transactionPin}
             onChange={(e) => setTransactionPin(e.target.value)}
             disabled={loading}
+            className="h-10 tracking-[1em] text-center"
             required
           />
           {!hasPin && (
-            <p className="text-xs text-muted-foreground group">
-              <span className="font-semibold text-primary">Note:</span> This is your first withdrawal. The PIN you enter here will be permanently saved as your master Transaction PIN.
+            <p className="text-[10px] bg-primary/5 p-2 rounded border border-primary/20 text-primary">
+              <b>Important:</b> This is your first withdrawal. The PIN you set now will be required for all future payouts.
             </p>
           )}
         </div>
 
-        <Button type="submit" className="w-full h-11 font-semibold" disabled={loading}>
-          {loading ? "Processing Transaction..." : "Submit Withdrawal Request"}
+        <Button type="submit" className="w-full h-12 font-bold text-base shadow-lg shadow-primary/20" disabled={loading}>
+          {loading ? (
+             <>
+               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+               Processing Securely...
+             </>
+          ) : (
+            "Authorize Withdrawal"
+          )}
         </Button>
       </form>
     </Card>

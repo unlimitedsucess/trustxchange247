@@ -124,6 +124,7 @@ export async function GET(req: Request) {
       totalInvested: globalTotalInvested,
       totalProfit,
       totalBonus,
+      totalWithdrawn,
       activeInvestments: globalActiveInvestmentsCount,
       withdrawableBalance: Math.max(0, withdrawableBalance), 
       recentInvestments,

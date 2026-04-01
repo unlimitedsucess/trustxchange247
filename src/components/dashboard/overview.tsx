@@ -10,6 +10,7 @@ interface DashboardOverviewProps {
   totalBonus: number
   activeInvestments: number
   withdrawableBalance: number
+  totalWithdrawn: number
 }
 
 export function DashboardOverview({
@@ -18,6 +19,7 @@ export function DashboardOverview({
   totalBonus = 0,
   activeInvestments = 0,
   withdrawableBalance = 0,
+  totalWithdrawn = 0,
 }: DashboardOverviewProps) {
   const overviewCards = [
     {
@@ -49,6 +51,13 @@ export function DashboardOverview({
       color: "primary",
     },
     {
+      label: "Total Withdrawn",
+      value: `$${totalWithdrawn.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      change: "Processed",
+      icon: DollarSign,
+      color: "primary",
+    },
+    {
       label: "Withdrawable Balance",
       value: `$${withdrawableBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       change: "Available now",
@@ -59,7 +68,7 @@ export function DashboardOverview({
 
   return (
     <motion.div 
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8"
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6 gap-6 mb-8"
       initial="hidden"
       animate="visible"
       variants={{

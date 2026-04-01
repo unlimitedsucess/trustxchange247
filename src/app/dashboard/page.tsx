@@ -23,6 +23,7 @@ export default function DashboardPage() {
     totalBonus: number;
     activeInvestments: number;
     withdrawableBalance: number;
+    totalWithdrawn: number;
     recentInvestments: any[];
     recentWithdrawals: any[];
     dailyReturns: any[];
@@ -33,6 +34,7 @@ export default function DashboardPage() {
     totalBonus: 0,
     activeInvestments: 0,
     withdrawableBalance: 0,
+    totalWithdrawn: 0,
     recentInvestments: [],
     recentWithdrawals: [],
     dailyReturns: []
@@ -104,6 +106,7 @@ export default function DashboardPage() {
             totalBonus={stats.totalBonus}
             activeInvestments={stats.activeInvestments}
             withdrawableBalance={stats.withdrawableBalance}
+            totalWithdrawn={stats.totalWithdrawn}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

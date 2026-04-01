@@ -3,9 +3,10 @@ import { connectDB } from "@/lib/db";
 import Deposit from "@/models/deposit";
 import User from "@/models/user";
 import InvestmentPlan from "@/models/investmentPlan";
+import DailyReturn from "@/models/dailyReturn";
 import { sendDepositApprovalEmail, sendBonusEmail } from "@/lib/email";
 
-// PUT /api/admin/deposits/[id]/approve  or just general status update
+// PUT /api/admin/deposits/[id]
 export async function PUT(req: Request, props: { params: Promise<{ id: string }> }) {
   try {
     await connectDB();
@@ -71,12 +72,15 @@ export async function DELETE(req: Request, props: { params: Promise<{ id: string
     await connectDB();
     const { id } = await props.params;
     
+    // Also delete any earning logs tied specifically to this investment ID
+    await DailyReturn.deleteMany({ investment: id });
+
     const deletedDeposit = await Deposit.findByIdAndDelete(id);
     if (!deletedDeposit) {
       return NextResponse.json({ success: false, message: "Deposit not found" }, { status: 404 });
     }
     
-    return NextResponse.json({ success: true, message: "Deposit deleted safely" }, { status: 200 });
+    return NextResponse.json({ success: true, message: "Investment and all related growth logs deleted" }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }

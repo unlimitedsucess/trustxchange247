@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/user";
+import Deposit from "@/models/deposit";
+import Withdrawal from "@/models/withdrawal";
+import DailyReturn from "@/models/dailyReturn";
 import bcrypt from "bcrypt";
 import { sendBonusEmail } from "@/lib/email";
 
@@ -57,12 +60,20 @@ export async function DELETE(req: Request, props: { params: Promise<{ id: string
   try {
     await connectDB();
     const { id } = await props.params;
+
+    // Delete related records
+    await Promise.all([
+      Deposit.deleteMany({ user: id }),
+      Withdrawal.deleteMany({ user: id }),
+      DailyReturn.deleteMany({ user: id })
+    ]);
+
     const deletedUser = await User.findByIdAndDelete(id);
     
     if (!deletedUser) {
       return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
     }
-    return NextResponse.json({ success: true, message: "User deleted successfully" }, { status: 200 });
+    return NextResponse.json({ success: true, message: "User and all related data deleted successfully" }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }

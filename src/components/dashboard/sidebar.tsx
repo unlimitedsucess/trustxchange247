@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation"
 import { LayoutDashboard, TrendingUp, LogOut, BarChart, X, CreditCard, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DarkModeToggle } from "../layout/dark-mode-toggle"
-import { useSelector } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import { RootState } from "@/store"
+import { tokenActions } from "@/store/token/token-slice"
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 
 interface DashboardSidebarProps {
   onClose?: () => void
@@ -25,6 +27,8 @@ export function DashboardSidebar({ onClose, user: propUser }: DashboardSidebarPr
   ]
 
   const isActive = (href: string) => pathname === href
+  const dispatch = useDispatch()
+  const router = useRouter()
 
   const token = useSelector((state: RootState) => state.token.token)
   const [localUser, setLocalUser] = useState<{name: string, email: string} | null>(null)
@@ -50,6 +54,11 @@ export function DashboardSidebar({ onClose, user: propUser }: DashboardSidebarPr
       }
     }
   }, [token, propUser])
+
+  const handleLogout = () => {
+    dispatch(tokenActions.deleteToken())
+    router.push("/login")
+  }
 
   return (
     <div className="flex flex-col h-full p-6">
@@ -105,7 +114,7 @@ export function DashboardSidebar({ onClose, user: propUser }: DashboardSidebarPr
           </div>
         </div>
 
-        <Button variant="outline" className="w-full gap-2 bg-transparent" size="sm">
+        <Button variant="outline" className="w-full gap-2 bg-transparent" size="sm" onClick={handleLogout}>
           <LogOut className="h-4 w-4" />
           Logout
         </Button>

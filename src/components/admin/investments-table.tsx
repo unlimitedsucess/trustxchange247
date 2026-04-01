@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
-import { Edit2, Loader2 } from "lucide-react"
+import { Edit2, Loader2, Trash2 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
@@ -29,6 +29,7 @@ export function InvestmentsTable() {
   const [editStatus, setEditStatus] = useState("")
   const [editRoi, setEditRoi] = useState<number>(0)
   const [editBonus, setEditBonus] = useState<number>(0)
+  const [isDeleting, setIsDeleting] = useState<string | null>(null)
   const [stagedReturns, setStagedReturns] = useState<any[]>([])
   const [activeInvestmentAmount, setActiveInvestmentAmount] = useState<number>(0)
   const [returnInput, setReturnInput] = useState({ 
@@ -141,6 +142,28 @@ export function InvestmentsTable() {
     }
   }
 
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this investment? This will also remove all associated performance logs.")) return
+    
+    setIsDeleting(id)
+    try {
+      const res = await fetch(`/api/admin/deposits/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.ok) {
+        setInvestments(investments.filter(inv => inv.id !== id))
+        toast({ title: "Deleted", description: "Investment removed successfully." })
+      } else {
+        throw new Error("Delete failed")
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Could not delete investment.", variant: "destructive" })
+    } finally {
+      setIsDeleting(null)
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Active": return "bg-success text-success-foreground"
@@ -189,9 +212,18 @@ export function InvestmentsTable() {
                       <td className="text-center py-3 px-4">
                         <Badge className={getStatusColor(investment.status)}>{investment.status}</Badge>
                       </td>
-                      <td className="text-center py-3 px-4">
-                        <Button size="sm" variant="ghost" onClick={() => handleEdit(investment.id)} className="h-8 w-8 p-0">
+                      <td className="text-center py-3 px-4 flex justify-center gap-2">
+                        <Button size="sm" variant="ghost" onClick={() => handleEdit(investment.id)} className="h-8 w-8 p-0" disabled={isDeleting === investment.id}>
                           <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => handleDelete(investment.id)} 
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          disabled={isDeleting === investment.id}
+                        >
+                          {isDeleting === investment.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                         </Button>
                       </td>
                     </tr>
