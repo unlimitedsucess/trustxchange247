@@ -19,7 +19,7 @@ export async function GET(req: Request) {
     }
 
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET || "default_secret");
-    const userId = decoded.userId; // FIXED: using 'userId' from JWT payload
+    const userId = decoded.userId; 
     
     if (!userId) {
       return NextResponse.json({ message: "Invalid Token" }, { status: 401 });
@@ -27,44 +27,71 @@ export async function GET(req: Request) {
 
     await connectDB();
 
-    const [deposits, withdrawals, userObj, dailyReturnsData] = await Promise.all([
+    const [deposits, withdrawals, userObj, allManualReturns] = await Promise.all([
       Deposit.find({ user: userId }),
       Withdrawal.find({ user: userId }),
       User.findById(userId).select("fullName email transactionPin totalBonus"),
-      DailyReturn.find({ user: userId }).sort({ date: -1, createdAt: -1 }).limit(50)
+      DailyReturn.find({ user: userId }).sort({ date: -1, createdAt: -1 })
     ]);
 
-    let totalInvested = 0;
-    let activeInvestments = 0;
+    let globalAutoRoi = 0;
+    let globalTotalInvested = 0;
+    let globalActiveInvestmentsCount = 0;
     let totalDepositBonus = 0;
-    let autoGrowthProfit = 0;
 
     const now = new Date();
 
-    deposits.forEach((dep) => {
-      // totalInvested includes all active, pending and completed
-      if (dep.status === "active" || dep.status === "pending" || dep.status === "completed") {
-        totalInvested += dep.amount;
-      }
-      
-      if (dep.status === "active") {
-        activeInvestments += 1;
-        
-        // Automatic ROI calculation based on days elapsed
-        if (dep.startDate && dep.roi) {
-          const start = new Date(dep.startDate);
-          const diffTime = Math.max(0, now.getTime() - start.getTime());
-          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          
-          if (diffDays > 0) {
-            // Profit = capital * (daily_roi_rate/100) * days
-            autoGrowthProfit += (dep.amount * (dep.roi / 100) * diffDays);
-          }
+    const recentInvestments = deposits.map(dep => {
+      // 1. Automatic Daily Yield Growth
+      let autoInvestmentGrowth = 0;
+      if (dep.status === "active" && dep.startDate && dep.roi) {
+        const start = new Date(dep.startDate);
+        const diffTime = Math.max(0, now.getTime() - start.getTime());
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 0) {
+          autoInvestmentGrowth = (dep.amount * (dep.roi / 100) * diffDays);
         }
       }
-      
+
+      // 2. Performance Ledger Items tied to this investment
+      const manualForThis = allManualReturns
+        .filter(mr => mr.investment?.toString() === dep._id.toString())
+        .reduce((sum, dr) => (dr.type !== 'bonus' ? sum + dr.amount : sum), 0); // and only interests for 'growth' column? User usually wants growth = interest/roi only
+
+      const totalGrowth = autoInvestmentGrowth + manualForThis;
+
+      // Update globals
+      if (dep.status === "active" || dep.status === "completed" || dep.status === "pending") {
+        globalTotalInvested += dep.amount;
+      }
+      if (dep.status === "active") {
+        globalActiveInvestmentsCount += 1;
+        globalAutoRoi += autoInvestmentGrowth;
+      }
       if (dep.bonus) totalDepositBonus += dep.bonus;
+
+      return {
+        id: dep._id.toString(),
+        plan: dep.plan || "Investment Plan", // FIXED: using 'plan' instead of 'planName'
+        amount: `$${dep.amount.toFixed(2)}`,
+        startDate: dep.startDate ? new Date(dep.startDate).toLocaleDateString() : "Pending",
+        endDate: dep.endDate ? new Date(dep.endDate).toLocaleDateString() : (dep.status === "active" ? "Ongoing" : "N/A"),
+        roi: `${dep.roi ? dep.roi : "0"}%`,
+        status: dep.status,
+        growth: totalGrowth.toFixed(2)
+      };
     });
+
+    // Sum all manual INTERESTS (even those not explicitly tied to an investment ID) for the total Profit card
+    let manualInterestsTotal = 0;
+    let manualBonusesTotal = 0;
+    allManualReturns.forEach((mr) => {
+        if (mr.type === "bonus") manualBonusesTotal += mr.amount;
+        else manualInterestsTotal += mr.amount;
+    });
+
+    const totalProfit = globalAutoRoi + manualInterestsTotal; 
+    const totalBonus = (userObj?.totalBonus || 0) + totalDepositBonus + manualBonusesTotal;
 
     let totalWithdrawn = 0;
     let pendingWithdrawals = 0;
@@ -73,52 +100,8 @@ export async function GET(req: Request) {
       if (w.status === "pending") pendingWithdrawals += w.amount;
     });
 
-    let manualInterests = 0;
-    let manualBonuses = 0;
-    dailyReturnsData.forEach((dr) => {
-        if (dr.type === "bonus") manualBonuses += dr.amount;
-        else manualInterests += dr.amount;
-    });
-
-    // Total Profit = Auto-calculated ROI + Manual admin history entries
-    const totalProfit = autoGrowthProfit + manualInterests; 
-    const totalBonus = (userObj?.totalBonus || 0) + totalDepositBonus + manualBonuses;
-
-    const totalWithdrawnValue = totalWithdrawn + pendingWithdrawals;
     const completedInvestmentsValue = deposits.filter(d => d.status === "completed").reduce((sum, d) => sum + d.amount, 0);
-    
-    // withdrawableBalance = Total Profit + Bonuses + Completed Principal - Active Withdrawals
-    const withdrawableBalance = totalProfit + totalBonus + completedInvestmentsValue - totalWithdrawnValue;
-
-    const recentInvestments = deposits.map(dep => {
-      // 1. Automatic Growth
-      let depGrowth = 0;
-      if (dep.status === "active" && dep.startDate && dep.roi) {
-        const start = new Date(dep.startDate);
-        const diffTime = Math.max(0, now.getTime() - start.getTime());
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        if (diffDays > 0) {
-          depGrowth = (dep.amount * (dep.roi / 100) * diffDays);
-        }
-      }
-
-      // 2. Add manual logs linked to this specific deposit
-      const manualForThis = dailyReturnsData
-        .filter(dr => dr.investment?.toString() === dep._id.toString())
-        .reduce((sum, dr) => sum + dr.amount, 0);
-
-      const totalDepGrowth = depGrowth + manualForThis;
-
-      return {
-        id: dep._id.toString(),
-        plan: dep.planName || "Investment Plan",
-        amount: `$${dep.amount.toFixed(2)}`,
-        startDate: dep.startDate ? new Date(dep.startDate).toLocaleDateString() : "Pending",
-        endDate: dep.endDate ? new Date(dep.endDate).toLocaleDateString() : (dep.status === "active" ? "Ongoing" : "N/A"),
-        roi: `${dep.roi ? dep.roi : "0"}%`,
-        growth: totalDepGrowth.toFixed(2)
-      };
-    });
+    const withdrawableBalance = totalProfit + totalBonus + completedInvestmentsValue - totalWithdrawn - pendingWithdrawals;
 
     const recentWithdrawals = withdrawals.map(w => ({
       id: w._id.toString(),
@@ -129,19 +112,19 @@ export async function GET(req: Request) {
       currency: w.currency || "USD"
     }));
 
-    const dailyReturns = dailyReturnsData.map(dr => ({
-        id: dr._id.toString(),
-        amount: `$${dr.amount.toFixed(2)}`,
-        day: dr.day,
-        type: dr.type || "interest",
-        date: new Date(dr.date || dr.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    const dailyReturns = allManualReturns.map(mr => ({
+        id: mr._id.toString(),
+        amount: `$${mr.amount.toFixed(2)}`,
+        day: mr.day,
+        type: mr.type || "interest",
+        date: new Date(mr.date || mr.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
     }));
 
     const stats = {
-      totalInvested,
+      totalInvested: globalTotalInvested,
       totalProfit,
       totalBonus,
-      activeInvestments,
+      activeInvestments: globalActiveInvestmentsCount,
       withdrawableBalance: Math.max(0, withdrawableBalance), 
       recentInvestments,
       recentWithdrawals,
