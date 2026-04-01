@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     }
 
     // 1. Authenticate the User
-    const user = await User.findById(userId).select("transactionPin totalBonus status");
+    const user = await User.findById(userId).select("transactionPin totalBonus status kycStatus");
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
@@ -38,6 +38,11 @@ export async function POST(req: Request) {
     // Suspension check
     if (user.status === "suspended") {
       return NextResponse.json({ message: "Your account is currently suspended and withdrawals are disabled. Please contact support." }, { status: 403 });
+    }
+
+    // KYC check
+    if (user.kycStatus !== "verified") {
+      return NextResponse.json({ message: "Identity verification (KYC) is required before withdrawing funds." }, { status: 403 });
     }
 
     // 2. Validate or Register Transaction PIN

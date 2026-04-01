@@ -31,7 +31,7 @@ export async function GET(req: Request) {
     const [deposits, withdrawals, userObj, allManualReturns, allPlans] = await Promise.all([
       Deposit.find({ user: userId }),
       Withdrawal.find({ user: userId }),
-      User.findById(userId).select("fullName email transactionPin totalBonus status suspensionReason"),
+      User.findById(userId).select("fullName email transactionPin totalBonus status suspensionReason kycStatus idDocument selfieDocument"),
       DailyReturn.find({ user: userId }).sort({ date: -1, createdAt: -1 }),
       InvestmentPlan.find({ isActive: true })
     ]);
@@ -165,7 +165,8 @@ export async function GET(req: Request) {
         email: userObj?.email || "...",
         hasTransactionPin: !!userObj?.transactionPin,
         status: userObj?.status || "active",
-        suspensionReason: userObj?.suspensionReason || ""
+        suspensionReason: userObj?.suspensionReason || "",
+        kycStatus: userObj?.kycStatus || "unverified"
       }
     };
 

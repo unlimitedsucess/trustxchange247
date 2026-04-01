@@ -6,6 +6,8 @@ export interface IUser {
   password?: string;
   country?: string;
   idDocument?: string;
+  selfieDocument?: string;
+  kycStatus: "unverified" | "pending" | "verified" | "rejected";
   isEmailVerified: boolean;
   verificationToken?: string;
   verificationExpires?: Date;
@@ -23,7 +25,9 @@ const userSchema = new Schema<IUser>({
   email: { type: String, required: true, unique: true, lowercase: true },
   password: { type: String },
   country: { type: String },
-  idDocument: { type: String }, 
+  idDocument: { type: String },
+  selfieDocument: { type: String },
+  kycStatus: { type: String, enum: ["unverified", "pending", "verified", "rejected"], default: "unverified" },
   isEmailVerified: { type: Boolean, default: false },
   verificationToken: { type: String },
   verificationExpires: { type: Date },

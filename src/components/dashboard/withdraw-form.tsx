@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
 import { useHttp } from "@/hooks/use-http"
-import { Loader2, ShieldCheck, Wallet } from "lucide-react"
+import { Loader2, ShieldCheck, Wallet, UploadCloud, AlertCircle } from "lucide-react"
 
 interface WithdrawFormProps {
   onSuccess?: () => void;
@@ -24,6 +24,11 @@ export function WithdrawForm({ onSuccess, availableBalance = 0 }: WithdrawFormPr
   const [transactionPin, setTransactionPin] = useState("")
   const [currency, setCurrency] = useState("USDT")
   const [hasPin, setHasPin] = useState<boolean | null>(null)
+  const [kycStatus, setKycStatus] = useState<string | null>(null)
+  
+  const [idFile, setIdFile] = useState<string>("")
+  const [selfieFile, setSelfieFile] = useState<string>("")
+  const [kycLoading, setKycLoading] = useState(false)
   
   const token = useSelector((state: RootState) => state.token.token)
   const { sendHttpRequest, loading } = useHttp()
@@ -38,6 +43,7 @@ export function WithdrawForm({ onSuccess, availableBalance = 0 }: WithdrawFormPr
         const data = await res.json()
         if (data.success && data.data?.user) {
           setHasPin(data.data.user.hasTransactionPin)
+          setKycStatus(data.data.user.kycStatus)
         }
       } catch (err) {
         console.error("Failed to check PIN status", err)
@@ -47,6 +53,40 @@ export function WithdrawForm({ onSuccess, availableBalance = 0 }: WithdrawFormPr
       fetchPinStatus()
     }
   }, [token])
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, setFile: (s: string) => void) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFile(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const submitKyc = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!idFile || !selfieFile) {
+      toast({ title: "Missing documents", description: "Please upload both ID and Selfie.", variant: "destructive" });
+      return;
+    }
+    setKycLoading(true);
+    await sendHttpRequest({
+        requestConfig: {
+           url: "/api/user/kyc",
+           method: "POST",
+           isAuth: true,
+           token: token || undefined,
+           body: { idDocument: idFile, selfieDocument: selfieFile },
+           successMessage: "KYC documents submitted for approval."
+        },
+        successRes: () => {
+            setKycStatus("pending")
+        }
+    });
+    setKycLoading(false);
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -91,6 +131,64 @@ export function WithdrawForm({ onSuccess, availableBalance = 0 }: WithdrawFormPr
         if (onSuccess) onSuccess();
       }
     });
+  }
+
+  if (kycStatus === "pending") {
+    return (
+      <Card className="p-8 border-border bg-card shadow-xl flex flex-col items-center justify-center text-center space-y-4">
+        <ShieldCheck className="w-16 h-16 text-yellow-500 mb-2" />
+        <h2 className="text-xl font-bold">Verification Pending</h2>
+        <p className="text-muted-foreground text-sm max-w-sm">
+          Your identity verification documents have been received and are currently under review by our compliance team. You will be able to withdraw funds as soon as your account is verified.
+        </p>
+      </Card>
+    )
+  }
+
+  if (kycStatus === "unverified" || kycStatus === "rejected") {
+    return (
+      <Card className="p-6 border-border bg-card shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+          <ShieldCheck size={120} className="text-primary" />
+        </div>
+        <div className="mb-6">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+            Identity Verification Required
+          </h2>
+          <p className="text-sm text-muted-foreground mt-2">
+            To comply with financial regulations and secure your account, you must verify your identity before withdrawing funds.
+            {kycStatus === "rejected" && <span className="text-destructive font-bold block mt-1">Your previous submission was rejected. Please upload clear, valid documents.</span>}
+          </p>
+        </div>
+
+        <form onSubmit={submitKyc} className="space-y-6">
+          <div className="space-y-2">
+            <Label>Valid Government ID (Passport, Driver's License)</Label>
+            <div className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:bg-muted/50 transition">
+              <Input type="file" accept="image/*" className="hidden" id="idUpload" onChange={(e) => handleFileUpload(e, setIdFile)} />
+              <Label htmlFor="idUpload" className="cursor-pointer flex flex-col items-center gap-2">
+                <UploadCloud className="w-8 h-8 text-muted-foreground" />
+                <span className="text-sm font-medium">{idFile ? "ID Uploaded (Click to change)" : "Upload ID Document"}</span>
+              </Label>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Selfie with ID</Label>
+            <div className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:bg-muted/50 transition">
+              <Input type="file" accept="image/*" capture="user" className="hidden" id="selfieUpload" onChange={(e) => handleFileUpload(e, setSelfieFile)} />
+              <Label htmlFor="selfieUpload" className="cursor-pointer flex flex-col items-center gap-2">
+                <UploadCloud className="w-8 h-8 text-muted-foreground" />
+                <span className="text-sm font-medium">{selfieFile ? "Selfie Uploaded (Click to change)" : "Take a Selfie"}</span>
+              </Label>
+            </div>
+          </div>
+          <Button type="submit" className="w-full h-12 font-bold" disabled={kycLoading || !idFile || !selfieFile}>
+            {kycLoading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Uploading...</> : "Submit Documents"}
+          </Button>
+        </form>
+      </Card>
+    )
   }
 
   return (

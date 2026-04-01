@@ -27,6 +27,9 @@ interface UserEditModalProps {
     country: string
     status: "Active" | "Suspended"
     transactionPin?: string
+    kycStatus: string
+    idDocument?: string
+    selfieDocument?: string
   } | null
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -34,7 +37,7 @@ interface UserEditModalProps {
 
 export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) {
   const [formData, setFormData] = useState(
-    user ? { ...user, password: "" } : { id: "", name: "", email: "", country: "", status: "Active", password: "", transactionPin: "" },
+    user ? { ...user, password: "" } : { id: "", name: "", email: "", country: "", status: "Active", password: "", transactionPin: "", kycStatus: "unverified" },
   )
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
@@ -73,7 +76,8 @@ export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) 
         email: formData.email,
         country: formData.country,
         status: formData.status,
-        transactionPin: formData.transactionPin || ""
+        transactionPin: formData.transactionPin || "",
+        kycStatus: formData.kycStatus
       }
       if (formData.password && formData.password.trim() !== "") {
         payload.password = formData.password
@@ -139,10 +143,50 @@ export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) 
             </div>
           </div>
 
-          <div className="space-y-2">
-              <Label htmlFor="transactionPin">Transaction PIN</Label>
-              <Input id="transactionPin" name="transactionPin" value={formData.transactionPin || ""} onChange={handleChange} placeholder="Security PIN" />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+                <Label htmlFor="transactionPin">Transaction PIN</Label>
+                <Input id="transactionPin" name="transactionPin" value={formData.transactionPin || ""} onChange={handleChange} placeholder="Security PIN" />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="kycStatus">KYC Status</Label>
+                <Select value={formData.kycStatus} onValueChange={(v) => setFormData(p => ({...p, kycStatus: v}))}>
+                    <SelectTrigger id="kycStatus"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="unverified">Unverified</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="verified">Verified</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
           </div>
+
+          {(user?.idDocument || user?.selfieDocument) && (
+             <div className="space-y-2 border-t pt-4">
+                <Label>Submitted KYC Documents</Label>
+                <div className="grid grid-cols-2 gap-4">
+                   {user.idDocument && (
+                      <div className="flex flex-col gap-1">
+                         <span className="text-xs text-muted-foreground font-medium">ID Document</span>
+                         <a href={user.idDocument} target="_blank" rel="noopener noreferrer" className="overflow-hidden rounded-md border aspect-video block bg-muted">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={user.idDocument} alt="ID Document" className="w-full h-full object-cover hover:scale-105 transition" />
+                         </a>
+                      </div>
+                   )}
+                   {user.selfieDocument && (
+                      <div className="flex flex-col gap-1">
+                         <span className="text-xs text-muted-foreground font-medium">Selfie Verification</span>
+                         <a href={user.selfieDocument} target="_blank" rel="noopener noreferrer" className="overflow-hidden rounded-md border aspect-video block bg-muted">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={user.selfieDocument} alt="Selfie" className="w-full h-full object-cover hover:scale-105 transition" />
+                         </a>
+                      </div>
+                   )}
+                </div>
+             </div>
+          )}
 
           <div className="space-y-2 border-t pt-4">
             <Label htmlFor="password">Reset Password (Optional)</Label>

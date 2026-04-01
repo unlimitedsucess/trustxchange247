@@ -27,6 +27,9 @@ export type AdminUser = {
   status: "active" | "suspended";
   transactionPin?: string;
   totalBonus: number;
+  kycStatus: string;
+  idDocument?: string;
+  selfieDocument?: string;
 };
 
 const statusConfig: Record<
@@ -71,7 +74,10 @@ export function AdminUsersTable() {
           withdrawal: u.totalWithdrawals ? `$${u.totalWithdrawals.toLocaleString()}` : "$0",
           status: u.status || "active",
           transactionPin: u.transactionPin || "",
-          totalBonus: u.totalBonus || 0
+          totalBonus: u.totalBonus || 0,
+          kycStatus: u.kycStatus || "unverified",
+          idDocument: u.idDocument,
+          selfieDocument: u.selfieDocument
         }))
         setUsersData(mappedUsers)
       }
@@ -193,10 +199,11 @@ export function AdminUsersTable() {
                            <span className="text-xs font-bold text-destructive">-{user.withdrawal}</span>
                          </div>
                       </td>
-                      <td className="px-4 py-4 text-center">
+                      <td className="px-4 py-4 text-center flex flex-col items-center gap-1 mt-2">
                         <Badge variant={statusConfig[user.status]?.variant || "secondary"} className="capitalize">
                           {user.status}
                         </Badge>
+                        <Badge variant="outline" className={`capitalize text-[9px] ${user.kycStatus === 'verified' ? 'text-success border-success' : user.kycStatus === 'pending' ? 'text-yellow-500 border-yellow-500' : 'text-muted-foreground'}`}>KYC: {user.kycStatus}</Badge>
                       </td>
                       <td className="px-4 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">

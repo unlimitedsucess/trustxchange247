@@ -30,7 +30,7 @@ export default function DashboardPage() {
     recentInvestments: any[];
     recentWithdrawals: any[];
     dailyReturns: any[];
-    user?: { name: string; email: string; status: string; suspensionReason: string };
+    user?: { name: string; email: string; status: string; suspensionReason: string; kycStatus: string };
   }>({
     totalInvested: 0,
     totalProfit: 0,
@@ -102,7 +102,21 @@ export default function DashboardPage() {
         {/* Scrollable Viewport */}
         <div className="flex-1 overflow-y-auto px-4 py-6 sm:p-8 space-y-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Investment Overview</h1>
+            <div className="flex items-center gap-4 mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Investment Overview</h1>
+              {stats.user?.kycStatus === "verified" && (
+                <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded-md text-xs font-bold border border-green-500/20">Verified</span>
+              )}
+              {stats.user?.kycStatus === "pending" && (
+                <span className="px-2 py-1 bg-yellow-500/10 text-yellow-500 rounded-md text-xs font-bold border border-yellow-500/20">KYC Pending</span>
+              )}
+              {stats.user?.kycStatus === "rejected" && (
+                <span className="px-2 py-1 bg-red-500/10 text-red-500 rounded-md text-xs font-bold border border-red-500/20">KYC Rejected</span>
+              )}
+              {stats.user?.kycStatus === "unverified" && (
+                <span className="px-2 py-1 bg-gray-500/10 text-gray-500 rounded-md text-xs font-bold border border-gray-500/20">Unverified</span>
+              )}
+            </div>
             <p className="text-muted-foreground text-sm">Welcome back, {stats.user?.name || "Investor"}. Here is your portfolio status.</p>
           </div>
 
