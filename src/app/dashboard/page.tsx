@@ -6,9 +6,9 @@ import { InvestmentTable } from "@/components/dashboard/investment-table"
 import { WithdrawalTable } from "@/components/dashboard/withdrawal-table"
 import { InvestmentGrowthChart } from "@/components/dashboard/growth-chart"
 import { Card } from "@/components/ui/card"
-
+import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
-import { Menu } from "lucide-react"
+import { Menu, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
@@ -50,9 +50,7 @@ export default function DashboardPage() {
     const fetchStats = async () => {
       try {
         const res = await fetch("/api/user/dashboard", {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
         if (data.success) {
@@ -67,44 +65,37 @@ export default function DashboardPage() {
   }, [token, router]);
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Mobile Sidebar Overlay */}
+    <div className="flex h-screen overflow-hidden bg-background">
+      {/* Sidebar Overlay */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
-      <aside
-        className={`fixed md:relative w-64 h-full bg-sidebar md:overflow-hidden text-sidebar-foreground border-r border-sidebar-border transition-transform duration-300 z-50 md:z-auto ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        }`}
-      >
+      <aside className={`fixed md:relative w-64 h-full bg-sidebar z-50 transition-transform duration-300 md:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <DashboardSidebar onClose={() => setSidebarOpen(false)} user={stats.user} />
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col">
-       
-        <div className="md:hidden flex items-center justify-between p-4 border-b border-border bg-background sticky top-0 z-30">
-          <span className="font-semibold">Dashboard</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarOpen(true)}
-            className="h-9 w-9"
-          >
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col min-w-0 max-w-full overflow-hidden">
+        {/* Mobile Header */}
+        <div className="md:hidden flex items-center justify-between p-4 border-b bg-card">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+              <TrendingUp className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span className="font-bold tracking-tight">TrustXchange</span>
+          </div>
+          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} className="h-9 w-9">
             <Menu className="h-5 w-5" />
           </Button>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-background">
-          {/* Breadcrumb */}
-          <div className="mb-8 text-sm text-muted-foreground">
-            <span className="text-foreground font-semibold">Dashboard</span> / Overview
+        {/* Scrollable Viewport */}
+        <div className="flex-1 overflow-y-auto px-4 py-6 sm:p-8 space-y-8">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Investment Overview</h1>
+            <p className="text-muted-foreground text-sm">Welcome back, {stats.user?.name || "Investor"}. Here is your portfolio status.</p>
           </div>
 
           <DashboardOverview 
@@ -115,50 +106,68 @@ export default function DashboardPage() {
             withdrawableBalance={stats.withdrawableBalance}
           />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 my-8">
-            <InvestmentGrowthChart />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+                <InvestmentGrowthChart />
+            </div>
             
-            {/* Daily Returns Section */}
-            <Card className="flex flex-col border-border bg-card shadow-sm p-6 overflow-hidden">
-                <h2 className="text-xl font-bold mb-4">Daily Returns History</h2>
+            {/* Daily Returns History */}
+            <Card className="flex flex-col border-border bg-card shadow-sm overflow-hidden min-h-[400px]">
+                <div className="p-6 border-b bg-muted/20">
+                    <h2 className="text-lg font-bold flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-primary" />
+                        Earning History
+                    </h2>
+                </div>
                 <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full text-left">
                         <thead className="bg-muted/50 border-b">
                             <tr>
-                                <th className="text-left py-3 px-4 text-sm font-semibold">Day</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold">Amount</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold">Date</th>
+                                <th className="py-3 px-4 text-[11px] font-bold uppercase text-muted-foreground">Log</th>
+                                <th className="py-3 px-4 text-[11px] font-bold uppercase text-muted-foreground">Type</th>
+                                <th className="py-3 px-4 text-[11px] font-bold uppercase text-muted-foreground text-right">Credit</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="divide-y">
                              {stats.dailyReturns.length > 0 ? (
-                                 stats.dailyReturns.slice(0, 20).map((dr: any) => (
-                                     <tr key={dr.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                                         <td className="py-3 px-4 text-sm">
+                                 stats.dailyReturns.slice(0, 15).map((dr: any) => (
+                                     <tr key={dr.id} className="hover:bg-muted/30 transition-colors">
+                                         <td className="py-3 px-4 whitespace-nowrap">
                                             <div className="flex flex-col">
-                                                <span className="font-medium">{dr.day}</span>
-                                                <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-tighter">{dr.type === 'bonus' ? 'Special Reward' : 'Daily ROI'}</span>
+                                                <span className="text-sm font-medium">{dr.day}</span>
+                                                <span className="text-[10px] text-muted-foreground font-mono">{dr.date}</span>
                                             </div>
                                          </td>
-                                         <td className={`py-3 px-4 text-sm text-right font-bold ${dr.type === 'bonus' ? 'text-accent' : 'text-primary'}`}>
+                                         <td className="py-3 px-4 text-[10px] font-bold uppercase tracking-widest leading-none">
+                                            <span className={dr.type === "bonus" ? "text-accent" : "text-primary"}>
+                                                {dr.type === "bonus" ? "Bonus" : "Growth"}
+                                            </span>
+                                         </td>
+                                         <td className={`py-3 px-4 text-sm text-right font-bold tabular-nums ${dr.type === 'bonus' ? 'text-accent' : 'text-primary'}`}>
                                             {dr.type === 'bonus' ? '+' : ''}{dr.amount}
                                          </td>
-                                         <td className="py-3 px-4 text-sm text-right text-muted-foreground font-mono">{dr.date}</td>
                                      </tr>
                                  ))
-
                             ) : (
                                 <tr>
-                                    <td colSpan={3} className="py-8 text-center text-muted-foreground italic">No daily returns recorded yet.</td>
+                                    <td colSpan={3} className="py-12 text-center text-muted-foreground italic text-sm">No activity records.</td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
+                {stats.dailyReturns.length > 15 && (
+                    <div className="p-3 text-center border-t bg-muted/10">
+                        <span className="text-[10px] text-muted-foreground font-semibold">View all history in transactions</span>
+                    </div>
+                )}
             </Card>
           </div>
-          <InvestmentTable data={stats.recentInvestments} />
-          <WithdrawalTable data={stats.recentWithdrawals} />
+
+          <div className="space-y-8">
+            <InvestmentTable data={stats.recentInvestments} />
+            <WithdrawalTable data={stats.recentWithdrawals} />
+          </div>
         </div>
       </main>
     </div>
