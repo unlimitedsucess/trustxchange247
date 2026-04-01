@@ -42,21 +42,35 @@ export async function GET(req: Request) {
     const now = new Date();
 
     const recentInvestments = deposits.map(dep => {
-      // 1. Automatic Daily Yield Growth
+      // 1. Automatic Daily Yield Growth (Mon-Fri only)
       let autoInvestmentGrowth = 0;
       if (dep.status === "active" && dep.startDate && dep.roi) {
         const start = new Date(dep.startDate);
-        const diffTime = Math.max(0, now.getTime() - start.getTime());
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        if (diffDays > 0) {
-          autoInvestmentGrowth = (dep.amount * (dep.roi / 100) * diffDays);
+        const end = new Date(now);
+        
+        let count = 0;
+        let current = new Date(start);
+        
+        // Count Mon-Fri between start date and now
+        while (current <= end) {
+            const dayOfWeek = current.getDay();
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not Sunday (0) and not Saturday (6)
+                if (current.toDateString() !== start.toDateString()) {
+                    count++;
+                }
+            }
+            current.setDate(current.getDate() + 1);
+        }
+
+        if (count > 0) {
+          autoInvestmentGrowth = (dep.amount * (dep.roi / 100) * count);
         }
       }
 
       // 2. Performance Ledger Items tied to this investment
       const manualForThis = allManualReturns
         .filter(mr => mr.investment?.toString() === dep._id.toString())
-        .reduce((sum, dr) => (dr.type !== 'bonus' ? sum + dr.amount : sum), 0); // and only interests for 'growth' column? User usually wants growth = interest/roi only
+        .reduce((sum, dr) => (dr.type !== 'bonus' ? sum + dr.amount : sum), 0); 
 
       const totalGrowth = autoInvestmentGrowth + manualForThis;
 
@@ -72,7 +86,7 @@ export async function GET(req: Request) {
 
       return {
         id: dep._id.toString(),
-        plan: dep.plan || "Investment Plan", // FIXED: using 'plan' instead of 'planName'
+        plan: dep.plan || "Investment Plan", 
         amount: `$${dep.amount.toFixed(2)}`,
         startDate: dep.startDate ? new Date(dep.startDate).toLocaleDateString() : "Pending",
         endDate: dep.endDate ? new Date(dep.endDate).toLocaleDateString() : (dep.status === "active" ? "Ongoing" : "N/A"),
