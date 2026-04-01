@@ -97,6 +97,7 @@ export default function WithdrawalPage() {
              activeInvestments={stats.activeInvestments}
              withdrawableBalance={stats.withdrawableBalance}
              totalWithdrawn={stats.totalWithdrawn}
+             showOnlyWithdrawal={true}
           />
           
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">

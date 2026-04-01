@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
-import { CheckCircle, XCircle, Trash2, Loader2 } from "lucide-react"
+import { CheckCircle, XCircle, Trash2, Loader2, Info } from "lucide-react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
 import {
@@ -25,15 +25,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export function DepositsTable() {
   const [deposits, setDeposits] = useState<any[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editRoi, setEditRoi] = useState<number>(0)
-  const [editBonus, setEditBonus] = useState<number>(0)
   const [confirmingAction, setConfirmingAction] = useState<"approve" | "reject" | "delete" | null>(null)
   const [loading, setLoading] = useState(true)
   const [isActionLoading, setIsActionLoading] = useState(false)
@@ -53,6 +49,7 @@ export function DepositsTable() {
             id: d._id,
             userName: d.user?.fullName || "Unknown",
             amount: d.amount,
+            plan: d.plan || "N/A",
             paymentMethod: d.paymentMethod || "Crypto",
             date: new Date(d.createdAt).toLocaleDateString(),
             status: d.status === "active" ? "Approved" : d.status === "rejected" ? "Rejected" : d.status === "completed" ? "Completed" : "Pending"
@@ -74,11 +71,11 @@ export function DepositsTable() {
       const res = await fetch(`/api/admin/deposits/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status: "active", roi: editRoi, bonus: editBonus })
+        body: JSON.stringify({ status: "active" })
       })
       if (res.ok) {
         setDeposits(deposits.map((d) => (d.id === id ? { ...d, status: "Approved" } : d)))
-        toast({ title: "Success", description: "Deposit approved with ROI & Bonus" })
+        toast({ title: "Success", description: "Deposit approved. Plan ROI has been activated." })
         setEditingId(null)
         setConfirmingAction(null)
       }
@@ -150,8 +147,9 @@ export function DepositsTable() {
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-4 font-semibold">User Name</th>
+                  <th className="text-left py-3 px-4 font-semibold">Plan</th>
                   <th className="text-right py-3 px-4 font-semibold">Amount</th>
-                  <th className="text-left py-3 px-4 font-semibold">Payment Method</th>
+                  <th className="text-left py-3 px-4 font-semibold">Method</th>
                   <th className="text-left py-3 px-4 font-semibold">Date</th>
                   <th className="text-center py-3 px-4 font-semibold">Status</th>
                   <th className="text-center py-3 px-4 font-semibold">Actions</th>
@@ -161,14 +159,15 @@ export function DepositsTable() {
                 {loading ? (
                    Array.from({ length: 4 }).map((_, idx) => (
                     <tr key={idx} className="border-b border-border">
-                      <td colSpan={6} className="py-4 px-4"><Skeleton className="h-10 w-full" /></td>
+                      <td colSpan={7} className="py-4 px-4"><Skeleton className="h-10 w-full" /></td>
                     </tr>
                   ))
                 ) : deposits.length > 0 ? (
                   deposits.map((deposit) => (
                     <tr key={deposit.id} className="border-b border-border hover:bg-muted/50">
                       <td className="py-3 px-4 font-medium">{deposit.userName}</td>
-                      <td className="text-right py-3 px-4">${deposit.amount.toLocaleString()}</td>
+                      <td className="py-3 px-4 italic">{deposit.plan}</td>
+                      <td className="text-right py-3 px-4 font-bold text-primary">${deposit.amount.toLocaleString()}</td>
                       <td className="py-3 px-4">{deposit.paymentMethod}</td>
                       <td className="py-3 px-4">{deposit.date}</td>
                       <td className="text-center py-3 px-4">
@@ -202,7 +201,7 @@ export function DepositsTable() {
                               </Button>
                             </>
                           ) : (
-                            <span className="text-muted-foreground text-xs">No action</span>
+                            <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-tighter opacity-50">Locked</span>
                           )}
                           <Button
                             size="sm"
@@ -221,7 +220,7 @@ export function DepositsTable() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">No deposits found.</td>
+                    <td colSpan={7} className="py-8 text-center text-muted-foreground">No deposits found.</td>
                   </tr>
                 )}
               </tbody>
@@ -234,37 +233,22 @@ export function DepositsTable() {
       <Dialog open={editingId !== null && confirmingAction === "approve"} onOpenChange={(open) => !open && setEditingId(null)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Approve Deposit</DialogTitle>
-            <DialogDescription>Set the final ROI and any initial bonus for this investment.</DialogDescription>
+            <DialogTitle>Approve Investment?</DialogTitle>
+            <DialogDescription className="flex flex-col gap-3">
+               <span>Are you sure you want to approve this deposit?</span>
+               <div className="bg-primary/5 p-3 rounded border border-primary/20 flex gap-3 items-start">
+                  <Info className="h-5 w-5 text-primary shrink-0" />
+                  <span className="text-xs text-primary leading-tight font-medium">
+                     The system will automatically apply the Daily ROI associated with the user's selected investment plan. 
+                     The capital will be moved to the active trading ledger.
+                  </span>
+               </div>
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="app_roi">ROI Percentage (%)</Label>
-              <Input
-                id="app_roi"
-                type="number"
-                value={editRoi}
-                onChange={(e) => setEditRoi(Number(e.target.value))}
-                disabled={isActionLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="app_bonus" className="text-primary font-bold">Welcome Bonus ($)</Label>
-              <Input
-                id="app_bonus"
-                type="number"
-                value={editBonus}
-                onChange={(e) => setEditBonus(Number(e.target.value))}
-                className="border-primary"
-                disabled={isActionLoading}
-              />
-            </div>
-          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingId(null)} disabled={isActionLoading}>Cancel</Button>
-            <Button onClick={() => handleApprove(editingId!)} disabled={isActionLoading} className="min-w-[150px]">
-                {isActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Approve & Set Yield"}
+            <Button onClick={() => handleApprove(editingId!)} disabled={isActionLoading} className="min-w-[150px] font-bold">
+                {isActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Approval"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -279,7 +263,7 @@ export function DepositsTable() {
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmingAction === "reject"
-                ? "This deposit request will be rejected and the user will be notified."
+                ? "This deposit request will be rejected and the user will no longer see it as pending."
                 : "This deposit will be permanently deleted from the database. This action cannot be undone."}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -290,7 +274,7 @@ export function DepositsTable() {
             <Button 
                 variant="destructive"
                 disabled={isActionLoading}
-                className="min-w-[100px]"
+                className="min-w-[100px] font-bold"
                 onClick={() => {
                     if (editingId && confirmingAction === "reject") handleReject(editingId)
                     if (editingId && confirmingAction === "delete") handleDelete(editingId)

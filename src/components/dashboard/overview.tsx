@@ -5,12 +5,13 @@ import { TrendingUp, DollarSign, Zap, Wallet } from "lucide-react"
 import { motion } from "framer-motion"
 
 interface DashboardOverviewProps {
-  totalInvested: number
-  totalProfit: number
-  totalBonus: number
-  activeInvestments: number
-  withdrawableBalance: number
-  totalWithdrawn: number
+  totalInvested?: number
+  totalProfit?: number
+  totalBonus?: number
+  activeInvestments?: number
+  withdrawableBalance?: number
+  totalWithdrawn?: number
+  showOnlyWithdrawal?: boolean
 }
 
 export function DashboardOverview({
@@ -20,14 +21,17 @@ export function DashboardOverview({
   activeInvestments = 0,
   withdrawableBalance = 0,
   totalWithdrawn = 0,
+  showOnlyWithdrawal = false
 }: DashboardOverviewProps) {
-  const overviewCards = [
+  
+  const allCards = [
     {
       label: "Total Invested",
       value: `$${totalInvested.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       change: "Active & Pending",
       icon: DollarSign,
       color: "primary",
+      id: "invested"
     },
     {
       label: "Total Profit",
@@ -35,6 +39,7 @@ export function DashboardOverview({
       change: "Earned ROI",
       icon: TrendingUp,
       color: "accent",
+      id: "profit"
     },
     {
         label: "Total Bonus",
@@ -42,6 +47,7 @@ export function DashboardOverview({
         change: "Admin Rewards",
         icon: Zap,
         color: "primary",
+        id: "bonus"
       },
     {
       label: "Active Investments",
@@ -49,6 +55,7 @@ export function DashboardOverview({
       change: "Current plans",
       icon: Zap,
       color: "primary",
+      id: "active"
     },
     {
       label: "Total Withdrawn",
@@ -56,6 +63,7 @@ export function DashboardOverview({
       change: "Processed",
       icon: DollarSign,
       color: "primary",
+      id: "withdrawn"
     },
     {
       label: "Withdrawable Balance",
@@ -63,12 +71,21 @@ export function DashboardOverview({
       change: "Available now",
       icon: Wallet,
       color: "accent",
+      id: "balance"
     },
   ]
 
+  const overviewCards = showOnlyWithdrawal 
+    ? allCards.filter(c => c.id === "withdrawn" || c.id === "balance")
+    : allCards;
+
+  const gridClass = showOnlyWithdrawal 
+    ? "grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 max-w-2xl"
+    : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6 gap-6 mb-8";
+
   return (
     <motion.div 
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6 gap-6 mb-8"
+      className={gridClass}
       initial="hidden"
       animate="visible"
       variants={{

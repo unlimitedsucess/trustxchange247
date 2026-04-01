@@ -6,11 +6,12 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
 import { useHttp } from "@/hooks/use-http"
-import { Loader2, ShieldCheck } from "lucide-react"
+import { Loader2, ShieldCheck, Wallet } from "lucide-react"
 
 interface WithdrawFormProps {
   onSuccess?: () => void;
@@ -21,6 +22,7 @@ export function WithdrawForm({ onSuccess, availableBalance = 0 }: WithdrawFormPr
   const [amount, setAmount] = useState("")
   const [walletAddress, setWalletAddress] = useState("")
   const [transactionPin, setTransactionPin] = useState("")
+  const [currency, setCurrency] = useState("USDT")
   const [hasPin, setHasPin] = useState<boolean | null>(null)
   
   const token = useSelector((state: RootState) => state.token.token)
@@ -77,7 +79,8 @@ export function WithdrawForm({ onSuccess, availableBalance = 0 }: WithdrawFormPr
         body: {
           amount: withdrawAmount,
           walletAddress,
-          transactionPin
+          transactionPin,
+          currency
         },
         successMessage: `Withdrawal request of $${withdrawAmount.toFixed(2)} submitted successfully`,
       },
@@ -123,18 +126,32 @@ export function WithdrawForm({ onSuccess, availableBalance = 0 }: WithdrawFormPr
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="walletAddress">Destination Wallet Address</Label>
-          <Input
-            id="walletAddress"
-            placeholder="Enter USDT (TRC20) address..."
-            value={walletAddress}
-            onChange={(e) => setWalletAddress(e.target.value)}
-            disabled={loading}
-            className="h-10"
-            required
-          />
-          <p className="text-[10px] text-muted-foreground italic">Funds will be sent to this address upon approval.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+                <Label htmlFor="currency">Withdrawal Method</Label>
+                <Select value={currency} onValueChange={setCurrency} disabled={loading}>
+                    <SelectTrigger className="h-10">
+                        <SelectValue placeholder="Select Currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="USDT">USDT (TRC20)</SelectItem>
+                        <SelectItem value="BTC">Bitcoin (BTC)</SelectItem>
+                        <SelectItem value="ETH">Ethereum (ETH)</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="walletAddress">{currency} Receiving Address</Label>
+                <Input
+                    id="walletAddress"
+                    placeholder={`Enter your ${currency} address...`}
+                    value={walletAddress}
+                    onChange={(e) => setWalletAddress(e.target.value)}
+                    disabled={loading}
+                    className="h-10"
+                    required
+                />
+            </div>
         </div>
 
         <div className="space-y-2">

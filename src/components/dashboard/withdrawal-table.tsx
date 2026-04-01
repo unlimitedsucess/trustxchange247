@@ -43,8 +43,9 @@ export function WithdrawalTable({ data = [], isLoading = false }: { data?: any[]
               <thead>
                 <tr className="border-b border-border">
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">Currency</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">Date</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -54,6 +55,7 @@ export function WithdrawalTable({ data = [], isLoading = false }: { data?: any[]
                     className="border-b border-border hover:bg-muted/30 transition-colors last:border-b-0"
                   >
                     <td className="px-4 py-4 text-sm font-bold text-primary">{withdrawal.amount}</td>
+                    <td className="px-4 py-4 text-xs font-bold uppercase ">{withdrawal.currency || "USDT"}</td>
                     <td className="px-4 py-4 text-sm text-muted-foreground">{withdrawal.date || withdrawal.requestDate}</td>
                     <td className="px-4 py-4 text-sm capitalize">
                       <Badge variant={statusConfig[withdrawal.status]?.variant || "outline"}>

@@ -21,20 +21,28 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
 
     let updates: any = {};
     if (status) updates.status = status;
-    if (roi !== undefined) updates.roi = Number(roi);
-    if (bonus !== undefined) updates.bonus = Number(bonus);
     
-    // Only calculate start and end dates if we are freshly moving to 'active'
+    // Auto-fetch and set ROI from plan if we are freshly moving to 'active' and ROI wasn't provided
     if (status === "active" && depositToUpdate.status !== "active") {
-      updates.startDate = new Date();
-      
-      const planObj = await InvestmentPlan.findOne({ name: depositToUpdate.plan });
-      if (planObj && planObj.durationDays) {
-        const endDate = new Date(updates.startDate);
-        endDate.setDate(endDate.getDate() + planObj.durationDays);
-        updates.endDate = endDate;
-      }
+        const planObj = await InvestmentPlan.findOne({ name: depositToUpdate.plan });
+        
+        if (roi === undefined && planObj) {
+            updates.roi = planObj.dailyRoi;
+        } else if (roi !== undefined) {
+            updates.roi = Number(roi);
+        }
+
+        updates.startDate = new Date();
+        if (planObj && planObj.durationDays) {
+            const endDate = new Date(updates.startDate);
+            endDate.setDate(endDate.getDate() + planObj.durationDays);
+            updates.endDate = endDate;
+        }
+    } else {
+        if (roi !== undefined) updates.roi = Number(roi);
     }
+    
+    if (bonus !== undefined) updates.bonus = Number(bonus);
 
     // Check if bonus was added
     const oldBonus = depositToUpdate.bonus || 0;
