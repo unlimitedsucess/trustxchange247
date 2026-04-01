@@ -90,15 +90,35 @@ export async function GET(req: Request) {
     // withdrawableBalance = Total Profit + Bonuses + Completed Principal - Active Withdrawals
     const withdrawableBalance = totalProfit + totalBonus + completedInvestmentsValue - totalWithdrawnValue;
 
-    const recentInvestments = deposits.map(dep => ({
-      id: dep._id.toString(),
-      plan: dep.planName || "Investment Plan",
-      amount: `$${dep.amount.toFixed(2)}`,
-      startDate: dep.startDate ? new Date(dep.startDate).toLocaleDateString() : "Pending",
-      endDate: dep.endDate ? new Date(dep.endDate).toLocaleDateString() : (dep.status === "active" ? "Ongoing" : "N/A"),
-      roi: `${dep.roi ? dep.roi : "0"}%`,
-      growth: dep.currentBalance ? (dep.currentBalance - dep.amount).toFixed(2) : "0.00"
-    }));
+    const recentInvestments = deposits.map(dep => {
+      // 1. Automatic Growth
+      let depGrowth = 0;
+      if (dep.status === "active" && dep.startDate && dep.roi) {
+        const start = new Date(dep.startDate);
+        const diffTime = Math.max(0, now.getTime() - start.getTime());
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 0) {
+          depGrowth = (dep.amount * (dep.roi / 100) * diffDays);
+        }
+      }
+
+      // 2. Add manual logs linked to this specific deposit
+      const manualForThis = dailyReturnsData
+        .filter(dr => dr.investment?.toString() === dep._id.toString())
+        .reduce((sum, dr) => sum + dr.amount, 0);
+
+      const totalDepGrowth = depGrowth + manualForThis;
+
+      return {
+        id: dep._id.toString(),
+        plan: dep.planName || "Investment Plan",
+        amount: `$${dep.amount.toFixed(2)}`,
+        startDate: dep.startDate ? new Date(dep.startDate).toLocaleDateString() : "Pending",
+        endDate: dep.endDate ? new Date(dep.endDate).toLocaleDateString() : (dep.status === "active" ? "Ongoing" : "N/A"),
+        roi: `${dep.roi ? dep.roi : "0"}%`,
+        growth: totalDepGrowth.toFixed(2)
+      };
+    });
 
     const recentWithdrawals = withdrawals.map(w => ({
       id: w._id.toString(),
