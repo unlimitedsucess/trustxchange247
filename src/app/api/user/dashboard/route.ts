@@ -26,12 +26,13 @@ export async function GET(req: Request) {
       Deposit.find({ user: userId }),
       Withdrawal.find({ user: userId }),
       User.findById(userId).select("fullName email transactionPin totalBonus"),
-      DailyReturn.find({ user: userId }).sort({ date: -1, createdAt: -1 })
+      DailyReturn.find({ user: userId }).sort({ date: -1, createdAt: -1 }).limit(50)
     ]);
 
     let totalInvested = 0;
     let activeInvestments = 0;
     let totalDepositBonus = 0;
+    let totalGrowth = 0;
 
     deposits.forEach((dep) => {
       if (dep.status === "active" || dep.status === "pending" || dep.status === "completed") {
@@ -39,6 +40,11 @@ export async function GET(req: Request) {
       }
       if (dep.status === "active") activeInvestments += 1;
       if (dep.bonus) totalDepositBonus += dep.bonus;
+      
+      const currentVal = dep.currentBalance || dep.amount;
+      if (currentVal > dep.amount) {
+        totalGrowth += (currentVal - dep.amount);
+      }
     });
 
     let totalWithdrawn = 0;
@@ -48,15 +54,15 @@ export async function GET(req: Request) {
       if (w.status === "pending") pendingWithdrawals += w.amount;
     });
 
-    let totalInterests = 0;
-    let totalBonusesFromLogs = 0;
+    let manualInterests = 0;
+    let manualBonuses = 0;
     dailyReturnsData.forEach((dr) => {
-        if (dr.type === "bonus") totalBonusesFromLogs += dr.amount;
-        else totalInterests += dr.amount;
+        if (dr.type === "bonus") manualBonuses += dr.amount;
+        else manualInterests += dr.amount;
     });
 
-    const totalProfit = totalInterests; 
-    const totalBonus = (userObj?.totalBonus || 0) + totalDepositBonus + totalBonusesFromLogs;
+    const totalProfit = totalGrowth + manualInterests; 
+    const totalBonus = (userObj?.totalBonus || 0) + totalDepositBonus + manualBonuses;
 
     const totalWithdrawnValue = totalWithdrawn + pendingWithdrawals;
     const completedInvestmentsValue = deposits.filter(d => d.status === "completed").reduce((sum, d) => sum + d.amount, 0);

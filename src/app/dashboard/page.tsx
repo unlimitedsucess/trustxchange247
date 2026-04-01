@@ -131,14 +131,22 @@ export default function DashboardPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {stats.dailyReturns.length > 0 ? (
-                                stats.dailyReturns.slice(0, 5).map((dr: any) => (
-                                    <tr key={dr.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                                        <td className="py-3 px-4 text-sm font-medium">{dr.day}</td>
-                                        <td className="py-3 px-4 text-sm text-right font-bold text-primary">{dr.amount}</td>
-                                        <td className="py-3 px-4 text-sm text-right text-muted-foreground">{dr.date}</td>
-                                    </tr>
-                                ))
+                             {stats.dailyReturns.length > 0 ? (
+                                 stats.dailyReturns.slice(0, 20).map((dr: any) => (
+                                     <tr key={dr.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                                         <td className="py-3 px-4 text-sm">
+                                            <div className="flex flex-col">
+                                                <span className="font-medium">{dr.day}</span>
+                                                <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-tighter">{dr.type === 'bonus' ? 'Special Reward' : 'Daily ROI'}</span>
+                                            </div>
+                                         </td>
+                                         <td className={`py-3 px-4 text-sm text-right font-bold ${dr.type === 'bonus' ? 'text-accent' : 'text-primary'}`}>
+                                            {dr.type === 'bonus' ? '+' : ''}{dr.amount}
+                                         </td>
+                                         <td className="py-3 px-4 text-sm text-right text-muted-foreground font-mono">{dr.date}</td>
+                                     </tr>
+                                 ))
+
                             ) : (
                                 <tr>
                                     <td colSpan={3} className="py-8 text-center text-muted-foreground italic">No daily returns recorded yet.</td>
