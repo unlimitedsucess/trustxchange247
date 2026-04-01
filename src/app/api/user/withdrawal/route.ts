@@ -30,9 +30,14 @@ export async function POST(req: Request) {
     }
 
     // 1. Authenticate the User
-    const user = await User.findById(userId).select("transactionPin totalBonus");
+    const user = await User.findById(userId).select("transactionPin totalBonus status");
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
+    // Suspension check
+    if (user.status === "suspended") {
+      return NextResponse.json({ message: "Your account is currently suspended and withdrawals are disabled. Please contact support." }, { status: 403 });
     }
 
     // 2. Validate or Register Transaction PIN

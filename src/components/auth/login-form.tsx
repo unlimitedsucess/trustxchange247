@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { useHttp } from "@/hooks/use-http";
 // your redux slice
 import { tokenActions } from "@/store/token/token-slice";
@@ -24,6 +24,7 @@ export function LoginForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [apiError, setApiError] = useState(""); // API error state
+  const [showPassword, setShowPassword] = useState(false);
 
   const { sendHttpRequest, loading } = useHttp();
   const dispatch = useDispatch();
@@ -141,15 +142,24 @@ export function LoginForm() {
           >
             Password
           </Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="••••••••"
-            value={formData.password}
-            onChange={handleChange}
-            className={errors.password ? "border-destructive" : ""}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              value={formData.password}
+              onChange={handleChange}
+              className={errors.password ? "border-destructive pr-10" : "pr-10"}
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
           {errors.password && (
             <p className="text-destructive text-xs mt-1 flex items-center gap-1">
               <AlertCircle className="h-3 w-3" /> {errors.password}
@@ -171,7 +181,7 @@ export function LoginForm() {
               Remember me
             </Label>
           </div>
-          <Link href="#" className="text-sm text-primary hover:underline">
+          <Link href="/forgot-password"  className="text-sm text-primary hover:underline">
             Forgot password?
           </Link>
         </div>

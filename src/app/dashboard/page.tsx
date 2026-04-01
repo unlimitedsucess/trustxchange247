@@ -24,10 +24,13 @@ export default function DashboardPage() {
     activeInvestments: number;
     withdrawableBalance: number;
     totalWithdrawn: number;
+    totalApprovedDeposits: number;
+    totalPendingDeposits: number;
+    totalRejectedDeposits: number;
     recentInvestments: any[];
     recentWithdrawals: any[];
     dailyReturns: any[];
-    user?: { name: string; email: string };
+    user?: { name: string; email: string; status: string; suspensionReason: string };
   }>({
     totalInvested: 0,
     totalProfit: 0,
@@ -35,6 +38,9 @@ export default function DashboardPage() {
     activeInvestments: 0,
     withdrawableBalance: 0,
     totalWithdrawn: 0,
+    totalApprovedDeposits: 0,
+    totalPendingDeposits: 0,
+    totalRejectedDeposits: 0,
     recentInvestments: [],
     recentWithdrawals: [],
     dailyReturns: []
@@ -107,6 +113,11 @@ export default function DashboardPage() {
             activeInvestments={stats.activeInvestments}
             withdrawableBalance={stats.withdrawableBalance}
             totalWithdrawn={stats.totalWithdrawn}
+            totalApprovedDeposits={stats.totalApprovedDeposits}
+            totalPendingDeposits={stats.totalPendingDeposits}
+            totalRejectedDeposits={stats.totalRejectedDeposits}
+            status={stats.user?.status as any}
+            suspensionReason={stats.user?.suspensionReason}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -11,23 +11,30 @@ export interface IUser {
   verificationExpires?: Date;
   transactionPin?: string;
   totalBonus: number;
+  status: "active" | "suspended";
+  suspensionReason?: string;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   createdAt?: Date;
 }
 
 const userSchema = new Schema<IUser>({
-  // fullName, password, and country are now optional at creation to allow multi-step registration
   fullName: { type: String },
   email: { type: String, required: true, unique: true, lowercase: true },
   password: { type: String },
   country: { type: String },
-  idDocument: { type: String }, // e.g., National ID or Passport Number
+  idDocument: { type: String }, 
   isEmailVerified: { type: Boolean, default: false },
   verificationToken: { type: String },
   verificationExpires: { type: Date },
   transactionPin: { type: String },
   totalBonus: { type: Number, default: 0 },
+  status: { type: String, enum: ["active", "suspended"], default: "active" },
+  suspensionReason: { type: String },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
   createdAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
 
 const User = models.User || model<IUser>("User", userSchema);
 export default User;

@@ -23,7 +23,8 @@ export function DashboardSidebar({ onClose, user: propUser }: DashboardSidebarPr
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { label: "Investments", href: "/dashboard/investments", icon: TrendingUp },
     { label: "Investment Plans", href: "/dashboard/investment-plan", icon: BarChart },
-    { label: "Withrawal", href: "/dashboard/withdrawal", icon: CreditCard},
+    { label: "Withdrawal", href: "/dashboard/withdrawal", icon: CreditCard},
+    { label: "Security", href: "/dashboard/security", icon: ShieldCheck },
   ]
 
   const isActive = (href: string) => pathname === href

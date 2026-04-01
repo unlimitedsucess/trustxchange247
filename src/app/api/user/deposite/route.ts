@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
+import User from "@/models/user";
 import Deposit from "@/models/deposit";
 import DailyReturn from "@/models/dailyReturn";
 import { verifyToken } from "@/lib/auth";
@@ -10,6 +11,12 @@ export async function POST(req: NextRequest) {
   try {
     await connectDB();
     const user = verifyToken(req);
+
+    // Suspension Check
+    const userDoc = await User.findById(user.userId).select("status");
+    if (userDoc?.status === "suspended") {
+      return NextResponse.json({ message: "Your account has been suspended for violation of platform terms. Deposits are restricted." }, { status: 403 });
+    }
 
     const { plan, wallet, amount } = await req.json();
     const numericAmount = Number(amount);

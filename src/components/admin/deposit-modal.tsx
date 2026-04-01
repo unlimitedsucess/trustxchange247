@@ -19,7 +19,7 @@ import { RootState } from "@/store"
 import { useEffect } from "react"
 
 interface DepositModalProps {
-  userId: number | null
+  userId: string | null
   userName: string | null
   open: boolean
   onOpenChange: (open: boolean) => void

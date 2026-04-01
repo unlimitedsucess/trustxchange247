@@ -31,7 +31,7 @@ export async function GET(req: Request) {
     const [deposits, withdrawals, userObj, allManualReturns, allPlans] = await Promise.all([
       Deposit.find({ user: userId }),
       Withdrawal.find({ user: userId }),
-      User.findById(userId).select("fullName email transactionPin totalBonus"),
+      User.findById(userId).select("fullName email transactionPin totalBonus status suspensionReason"),
       DailyReturn.find({ user: userId }).sort({ date: -1, createdAt: -1 }),
       InvestmentPlan.find({ isActive: true })
     ]);
@@ -40,13 +40,20 @@ export async function GET(req: Request) {
     let globalTotalInvested = 0;
     let globalActiveInvestmentsCount = 0;
     let totalDepositBonus = 0;
+    let totalApprovedDeposits = 0;
+    let totalPendingDeposits = 0;
+    let totalRejectedDeposits = 0;
 
     const now = new Date();
     const planMap = new Map(allPlans.map(p => [p.name, p.dailyRoi]));
 
     const recentInvestments = deposits.map(dep => {
+      // Update totals
+      if (dep.status === "active") totalApprovedDeposits += dep.amount;
+      if (dep.status === "pending") totalPendingDeposits += dep.amount;
+      if (dep.status === "rejected") totalRejectedDeposits += dep.amount;
+
       // Use live plan ROI if available, otherwise fallback to saved ROI
-      // This fulfills "reflected everywhere until admin decides to change it"
       const currentRoi = planMap.get(dep.plan) ?? dep.roi ?? 0;
 
       // 1. Automatic Daily Yield Growth (Mon-Fri only)
@@ -145,6 +152,9 @@ export async function GET(req: Request) {
       totalProfit,
       totalBonus,
       totalWithdrawn,
+      totalApprovedDeposits,
+      totalPendingDeposits,
+      totalRejectedDeposits,
       activeInvestments: globalActiveInvestmentsCount,
       withdrawableBalance: Math.max(0, withdrawableBalance), 
       recentInvestments,
@@ -153,7 +163,9 @@ export async function GET(req: Request) {
       user: {
         name: userObj?.fullName || "Investor",
         email: userObj?.email || "...",
-        hasTransactionPin: !!userObj?.transactionPin
+        hasTransactionPin: !!userObj?.transactionPin,
+        status: userObj?.status || "active",
+        suspensionReason: userObj?.suspensionReason || ""
       }
     };
 

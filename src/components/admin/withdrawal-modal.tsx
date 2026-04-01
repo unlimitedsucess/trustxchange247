@@ -18,7 +18,7 @@ import { useSelector } from "react-redux"
 import { RootState } from "@/store"
 
 interface WithdrawalModalProps {
-  userId: number | null
+  userId: string | null
   userName: string | null
   open: boolean
   onOpenChange: (open: boolean) => void

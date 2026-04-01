@@ -336,3 +336,117 @@ export const sendDailyReturnEmail = async (email: string, amount: number, day: s
     `,
   });
 };
+export const sendSuspensionEmail = async (email: string, reason: string) => {
+  await transporter.sendMail({
+    from: `"Trust Xchange Safety" <support@trustxchange247.com>`,
+    to: email,
+    subject: "Urgent: Account Suspension Notice - TrustXchange247",
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+        </style>
+      </head>
+      <body style="margin: 0; padding: 40px 0; background-color: #fef2f2; font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+          
+          <!-- Hero Header -->
+          <div style="background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%); padding: 50px 20px; text-align: center;">
+             <p style="color: #fecaca; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 10px 0; font-weight: 600;">TrustXchange247 SECURITY TEAM</p>
+            <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">
+              Account Suspended
+            </h1>
+          </div>
+
+          <!-- Body Content -->
+          <div style="padding: 40px 40px 30px 40px;">
+            <h2 style="color: #991b1b; font-size: 20px; font-weight: 600; margin-top: 0; margin-bottom: 15px;">Safety Notice</h2>
+            <p style="color: #374151; font-size: 16px; line-height: 1.7; margin: 0 0 25px 0;">
+              Your TrustXchange247 account has been suspended by our security department due to a violation of our digital asset management policies.
+            </p>
+
+            <!-- Reason Block -->
+            <div style="background: #fff1f2; border: 1px solid #fecaca; border-radius: 12px; padding: 25px; margin: 0 0 30px 0;">
+               <span style="color: #991b1b; font-size: 13px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; display: block; margin-bottom: 10px;">Official Reason:</span>
+               <p style="color: #7f1d1d; font-size: 16px; margin: 0; font-style: italic; font-weight: 500;">
+                  "${reason}"
+               </p>
+            </div>
+
+            <div style="background-color: #f9fafb; border-left: 4px solid #991b1b; padding: 15px 20px; border-radius: 0 8px 8px 0; margin-bottom: 25px;">
+              <p style="color: #4b5563; font-size: 14px; margin: 0; line-height: 1.5;">
+                <strong>Restrictions Applied:</strong> While suspended, you cannot initiate new deposits, request withdrawals, or participate in active trading windows. Existing investments will remain in escrow.
+              </p>
+            </div>
+
+            <p style="color: #6b7280; font-size: 14px; line-height: 1.7; margin: 0; text-align: center;">
+              If you believe this is an error, please respond to this email with any supporting documentation to start the appeal process.
+            </p>
+          </div>
+
+          <!-- Footer -->
+          <div style="background: #f9fafb; padding: 35px 40px; text-align: center; border-top: 1px solid #f1f5f9;">
+            <p style="color: #64748b; font-size: 13px; margin: 0;">
+              &copy; ${new Date().getFullYear()} TrustXchange247 Security Division.<br/>
+              This is a mandatory service update regarding your balance safety.
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  });
+};
+
+export const sendPasswordResetEmail = async (email: string, resetLink: string) => {
+  await transporter.sendMail({
+    from: `"Trust Xchange Security" <support@trustxchange247.com>`,
+    to: email,
+    subject: "Password Reset Request - TrustXchange247",
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+        </style>
+      </head>
+      <body style="margin: 0; padding: 40px 0; background-color: #f1f5f9; font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+          
+          <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 50px 20px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">
+              Reset Password
+            </h1>
+          </div>
+
+          <div style="padding: 40px 40px 30px 40px;">
+            <h2 style="color: #0f172a; font-size: 22px; font-weight: 600; margin-top: 0; margin-bottom: 15px;">Forgot your password?</h2>
+            <p style="color: #475569; font-size: 16px; line-height: 1.7; margin: 0 0 30px 0;">
+              We received a request to reset the password for your TrustXchange247 account. Click the button below to choose a new password.
+            </p>
+
+            <div style="text-align: center; margin: 35px 0;">
+              <a href="${resetLink}" style="background-color: #4f46e5; color: #ffffff; padding: 16px 32px; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);">
+                Create New Password
+              </a>
+            </div>
+
+            <p style="color: #94a3b8; font-size: 13px; line-height: 1.5; margin: 30px 0 0 0; text-align: center;">
+              If you didn't request this, you can safely ignore this email. This link will expire in 1 hour for your protection.
+            </p>
+          </div>
+
+          <div style="background: #f8fafc; padding: 35px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="color: #94a3b8; font-size: 12px; margin: 0;">
+              &copy; ${new Date().getFullYear()} TrustXchange247 Global Security Team.
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  });
+};
