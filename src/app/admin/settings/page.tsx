@@ -21,7 +21,7 @@ export default function AdminSettingsPage() {
     usdtWalletTRC20: ""
   })
 
-  const token = useSelector((state: RootState) => state.token.token)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
 
   useEffect(() => {
     const fetchSettings = async () => {

@@ -35,7 +35,7 @@ export function DepositsTable() {
   const [isActionLoading, setIsActionLoading] = useState(false)
   const { toast } = useToast()
   
-  const token = useSelector((state: RootState) => state.token.token)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
 
   useEffect(() => {
     const fetchDeposits = async () => {

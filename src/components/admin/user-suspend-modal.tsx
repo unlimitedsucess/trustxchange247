@@ -29,7 +29,7 @@ interface UserSuspendModalProps {
 export function UserSuspendModal({ userId, userName, open, onOpenChange, onSuccess, isSuspending }: UserSuspendModalProps) {
   const [loading, setLoading] = useState(false)
   const [reason, setReason] = useState("Violation of platform terms and conditions.")
-  const token = useSelector((state: RootState) => state.token.token)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
   const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {

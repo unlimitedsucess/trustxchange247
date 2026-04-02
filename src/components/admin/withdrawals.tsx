@@ -25,7 +25,7 @@ export function WithdrawalsPanel() {
   const [confirmingAction, setConfirmingAction] = useState<"approve" | "reject" | "delete" | null>(null)
   const { toast } = useToast()
 
-  const token = useSelector((state: RootState) => state.token.token)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
 
   useEffect(() => {
     const fetchWithdrawals = async () => {

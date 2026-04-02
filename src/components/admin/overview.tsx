@@ -10,7 +10,7 @@ import { RootState } from "@/store"
 export function AdminOverview() {
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const token = useSelector((state: RootState) => state.token.token)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
 
   useEffect(() => {
     const fetchStats = async () => {

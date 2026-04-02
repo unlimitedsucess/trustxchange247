@@ -24,7 +24,7 @@ interface UserCreateModalProps {
 
 export function UserCreateModal({ open, onOpenChange, onSuccess }: UserCreateModalProps) {
   const [loading, setLoading] = useState(false)
-  const token = useSelector((state: RootState) => state.token.token)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
   const { toast } = useToast()
 
   const [formData, setFormData] = useState({

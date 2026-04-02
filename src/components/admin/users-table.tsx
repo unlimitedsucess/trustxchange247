@@ -55,7 +55,7 @@ export function AdminUsersTable() {
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
-  const token = useSelector((state: RootState) => state.token.token)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
 
   const fetchUsers = async () => {
     try {

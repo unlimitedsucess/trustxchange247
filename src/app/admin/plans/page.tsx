@@ -21,7 +21,7 @@ export default function AdminPlansPage() {
   })
   const [submitting, setSubmitting] = useState(false)
 
-  const token = useSelector((state: RootState) => state.token.token)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
 
   useEffect(() => {
     const fetchPlans = async () => {

@@ -3,6 +3,8 @@ import { connectDB } from "@/lib/db";
 import User from "@/models/user";
 import Deposit from "@/models/deposit";
 import Withdrawal from "@/models/withdrawal";
+import DailyReturn from "@/models/dailyReturn";
+import InvestmentPlan from "@/models/investmentPlan";
 import jwt from "jsonwebtoken";
 
 export async function POST(req: Request) {
@@ -61,34 +63,75 @@ export async function POST(req: Request) {
     }
 
     // 3. Reconcile Network Ledger Balance
-    const [deposits, withdrawals] = await Promise.all([
+    const [deposits, withdrawalsArray, allManualReturns, allPlans] = await Promise.all([
       Deposit.find({ user: userId }),
-      Withdrawal.find({ user: userId })
+      Withdrawal.find({ user: userId }),
+      DailyReturn.find({ user: userId }),
+      InvestmentPlan.find({ isActive: true })
     ]);
 
-    let totalProfit = 0;
+    let globalAutoRoi = 0;
+    let totalDepositBonus = 0;
+    const now = new Date();
+    const planMap = new Map(allPlans.map(p => [p.name, p.dailyRoi]));
+
     deposits.forEach((dep) => {
-      // Compound realistic profit derived from currentBalance minus base
-      if (dep.currentBalance && dep.currentBalance > dep.amount) {
-        totalProfit += (dep.currentBalance - dep.amount);
+      const currentRoi = planMap.get(dep.plan) ?? dep.roi ?? 0;
+      let autoInvestmentGrowth = 0;
+      
+      if ((dep.status === "active" || dep.status === "completed") && dep.startDate && currentRoi) {
+        const start = new Date(dep.startDate);
+        const end = (dep.status === "completed" && dep.endDate) ? new Date(dep.endDate) : new Date(now);
+        let count = 0;
+        let current = new Date(start);
+        
+        while (current <= end) {
+            const dayOfWeek = current.getDay();
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) { 
+                if (current.toDateString() !== start.toDateString()) {
+                    count++;
+                }
+            }
+            current.setDate(current.getDate() + 1);
+        }
+        if (count > 0) {
+          autoInvestmentGrowth = (dep.amount * (currentRoi / 100) * count);
+        }
       }
+      
+      if (dep.status === "active" || dep.status === "completed") {
+        globalAutoRoi += autoInvestmentGrowth;
+      }
+      if (dep.bonus) totalDepositBonus += dep.bonus;
     });
+
+    let manualInterestsTotal = 0;
+    let manualBonusesTotal = 0;
+    allManualReturns.forEach((mr) => {
+        if (mr.type === "bonus") manualBonusesTotal += mr.amount;
+        else manualInterestsTotal += mr.amount;
+    });
+
+    const totalProfit = globalAutoRoi + manualInterestsTotal;
+    const totalBonus = (user.totalBonus || 0) + totalDepositBonus + manualBonusesTotal;
 
     const completedInvestments = deposits
       .filter(d => d.status === "completed")
       .reduce((sum, d) => sum + d.amount, 0);
 
+    const activeInvestments = deposits
+      .filter(d => d.status === "active")
+      .reduce((sum, d) => sum + d.amount, 0);
+
     let totalWithdrawnAndPending = 0;
-    withdrawals.forEach((w) => {
-      if (w.status === "approved" || w.status === "pending" || w.status === "Completed") {
+    withdrawalsArray.forEach((w) => {
+      if (w.status === "approved" || w.status === "pending" || w.status === "processed" || w.status === "Completed" || w.status === "completed") {
         totalWithdrawnAndPending += w.amount;
       }
     });
 
-    const totalBonus = user.totalBonus || 0;
-
-    // Compute hard balance including bonus
-    const withdrawableBalance = totalProfit + completedInvestments + totalBonus - totalWithdrawnAndPending;
+    // Compute hard balance including bonus and active investments
+    const withdrawableBalance = totalProfit + completedInvestments + activeInvestments + totalBonus - totalWithdrawnAndPending;
 
     if (amount > withdrawableBalance) {
       return NextResponse.json(

@@ -42,7 +42,7 @@ export function UserEditModal({ user, open, onOpenChange }: UserEditModalProps) 
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   
-  const token = useSelector((state: RootState) => state.token.token)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
 
   useEffect(() => {
     if (user) {

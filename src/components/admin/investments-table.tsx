@@ -41,7 +41,7 @@ export function InvestmentsTable() {
   const [targetUserId, setTargetUserId] = useState<string | null>(null)
   const { toast } = useToast()
   
-  const token = useSelector((state: RootState) => state.token.token)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
 
   useEffect(() => {
     const fetchInvestments = async () => {

@@ -58,9 +58,9 @@ export async function GET(req: Request) {
 
       // 1. Automatic Daily Yield Growth (Mon-Fri only)
       let autoInvestmentGrowth = 0;
-      if (dep.status === "active" && dep.startDate && currentRoi) {
+      if ((dep.status === "active" || dep.status === "completed") && dep.startDate && currentRoi) {
         const start = new Date(dep.startDate);
-        const end = new Date(now);
+        const end = (dep.status === "completed" && dep.endDate) ? new Date(dep.endDate) : new Date(now);
         
         let count = 0;
         let current = new Date(start);
@@ -91,9 +91,11 @@ export async function GET(req: Request) {
       if (dep.status === "active" || dep.status === "completed" || dep.status === "pending") {
         globalTotalInvested += dep.amount;
       }
+      if (dep.status === "active" || dep.status === "completed") {
+        globalAutoRoi += autoInvestmentGrowth;
+      }
       if (dep.status === "active") {
         globalActiveInvestmentsCount += 1;
-        globalAutoRoi += autoInvestmentGrowth;
       }
       if (dep.bonus) totalDepositBonus += dep.bonus;
 
@@ -123,12 +125,12 @@ export async function GET(req: Request) {
     let totalWithdrawn = 0;
     let pendingWithdrawals = 0;
     withdrawals.forEach((w) => {
-      if (w.status === "approved") totalWithdrawn += w.amount;
+      if (w.status === "approved" || w.status === "processed" || w.status === "completed" || w.status === "Completed") totalWithdrawn += w.amount;
       if (w.status === "pending") pendingWithdrawals += w.amount;
     });
 
     const completedInvestmentsValue = deposits.filter(d => d.status === "completed").reduce((sum, d) => sum + d.amount, 0);
-    const withdrawableBalance = totalProfit + totalBonus + completedInvestmentsValue - totalWithdrawn - pendingWithdrawals;
+    const withdrawableBalance = totalProfit + totalBonus + completedInvestmentsValue + totalApprovedDeposits - totalWithdrawn - pendingWithdrawals;
 
     const recentWithdrawals = withdrawals.map(w => ({
       id: w._id.toString(),

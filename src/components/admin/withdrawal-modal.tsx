@@ -32,7 +32,7 @@ export function WithdrawalModal({ userId, userName, open, onOpenChange }: Withdr
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   
-  const token = useSelector((state: RootState) => state.token.token)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
 
   const handleSubmit = async () => {
     const withdrawAmount = Number.parseFloat(amount)
