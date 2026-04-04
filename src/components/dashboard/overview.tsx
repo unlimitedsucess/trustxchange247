@@ -140,7 +140,7 @@ export function DashboardOverview({
           </div>
           <div className="flex flex-col gap-2">
             <p className="text-[10px] text-muted-foreground text-center uppercase font-bold">Contact Support</p>
-            <a href="mailto:support@trustxchange247.com" className="bg-destructive text-white px-6 py-2 rounded-lg font-bold text-sm shadow-lg shadow-destructive/20 hover:bg-destructive/90 transition-all text-center">
+            <a href="mailto:support@trusxchange.com" className="bg-destructive text-white px-6 py-2 rounded-lg font-bold text-sm shadow-lg shadow-destructive/20 hover:bg-destructive/90 transition-all text-center">
                Open Appeal
             </a>
           </div>
