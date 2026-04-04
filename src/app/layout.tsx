@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "TrustXchange247 | Secure Crypto Investments",
     description: "Grow your wealth securely with TrustXchange247. Professional crypto trading and automated ROI plans.",
-    url: "https://trustxchange247.com",
+    url: "https://trusxchange.com",
     siteName: "TrustXchange247",
     images: [
       {

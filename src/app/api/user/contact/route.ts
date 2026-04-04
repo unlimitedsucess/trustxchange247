@@ -5,8 +5,8 @@ import { transporter } from "@/lib/email";
 
 const ALLOWED_ORIGINS = [
   "http://localhost:3000",
-  "https://trustxchange247.com",
-  "https://www.trustxchange247.com",
+  "https://trusxchange.com",
+  "https://www.trusxchange.com",
 ];
 
 function getCorsHeaders(origin: string | null) {

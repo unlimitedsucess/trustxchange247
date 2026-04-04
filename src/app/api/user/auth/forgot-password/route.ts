@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hour
     await user.save();
 
-    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://trustxchange247.com"}/reset-password?token=${token}&email=${user.email}`;
+    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://trusxchange.com"}/reset-password?token=${token}&email=${user.email}`;
 
     await sendPasswordResetEmail(user.email, resetLink);
 
