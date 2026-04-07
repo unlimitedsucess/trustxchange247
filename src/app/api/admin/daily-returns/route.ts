@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import DailyReturn from "@/models/dailyReturn";
 import User from "@/models/user";
+import Deposit from "@/models/deposit";
 import { sendDailyReturnEmail, sendBonusEmail } from "@/lib/email";
 
 export async function GET() {
@@ -43,6 +44,17 @@ export async function POST(req: Request) {
             date: item.date ? new Date(item.date) : new Date(),
             type: item.type || "interest"
         });
+        
+        // Also update the physical Deposit.currentBalance so the DB stays perfectly aligned 
+        // with the API's sum computation.
+        if (item.investmentId && item.type !== "bonus") {
+            const deposit = await Deposit.findById(item.investmentId);
+            if (deposit) {
+                deposit.currentBalance += Number(item.amount);
+                await deposit.save();
+            }
+        }
+        
         createdReturns.push(nr);
         if (item.type === "bonus") totalBonuses += Number(item.amount);
         else totalInterests += Number(item.amount);

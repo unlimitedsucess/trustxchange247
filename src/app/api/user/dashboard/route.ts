@@ -56,29 +56,8 @@ export async function GET(req: Request) {
       // Use live plan ROI if available, otherwise fallback to saved ROI
       const currentRoi = planMap.get(dep.plan) ?? dep.roi ?? 0;
 
-      // 1. Automatic Daily Yield Growth (Mon-Fri only)
+      // 1. Automatic Daily Yield Growth removed. System now uses Vercel Cron for daily ROI generation!
       let autoInvestmentGrowth = 0;
-      if ((dep.status === "active" || dep.status === "completed") && dep.startDate && currentRoi) {
-        const start = new Date(dep.startDate);
-        const end = (dep.status === "completed" && dep.endDate) ? new Date(dep.endDate) : new Date(now);
-        
-        let count = 0;
-        let current = new Date(start);
-        
-        while (current <= end) {
-            const dayOfWeek = current.getDay();
-            if (dayOfWeek !== 0 && dayOfWeek !== 6) { 
-                if (current.toDateString() !== start.toDateString()) {
-                    count++;
-                }
-            }
-            current.setDate(current.getDate() + 1);
-        }
-
-        if (count > 0) {
-          autoInvestmentGrowth = (dep.amount * (currentRoi / 100) * count);
-        }
-      }
 
       // 2. Performance Ledger Items tied to this investment
       const manualForThis = allManualReturns

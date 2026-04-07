@@ -86,30 +86,8 @@ export async function GET(req: NextRequest) {
     const transformedDeposits = deposits.map(dep => {
       let growth = 0;
       
-      // Auto ROI calculation using live plan rates for "reflected everywhere" behavior
+      // Auto ROI calculation removed. System now uses Vercel Cron for daily ROI generation!
       const currentRoi = planMap.get(dep.plan) ?? dep.roi ?? 0;
-
-      if (dep.status === "active" && dep.startDate && currentRoi) {
-        const start = new Date(dep.startDate);
-        const end = new Date(now);
-        
-        // Use standard weekday logic for consistency with Dashboard
-        let count = 0;
-        let current = new Date(start);
-        while (current <= end) {
-            const dayOfWeek = current.getDay();
-            if (dayOfWeek !== 0 && dayOfWeek !== 6) { 
-                if (current.toDateString() !== start.toDateString()) {
-                    count++;
-                }
-            }
-            current.setDate(current.getDate() + 1);
-        }
-
-        if (count > 0) {
-          growth += (dep.amount * (currentRoi / 100) * count);
-        }
-      }
 
       // Manual ROI logs
       const manualForThis = manualReturns
