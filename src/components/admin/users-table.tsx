@@ -30,6 +30,7 @@ export type AdminUser = {
   kycStatus: string;
   idDocument?: string;
   selfieDocument?: string;
+  totalBalance?: number;
 };
 
 const statusConfig: Record<
@@ -75,6 +76,7 @@ export function AdminUsersTable() {
           status: u.status || "active",
           transactionPin: u.transactionPin || "",
           totalBonus: u.totalBonus || 0,
+          totalBalance: u.totalBalance,
           kycStatus: u.kycStatus || "unverified",
           idDocument: u.idDocument,
           selfieDocument: u.selfieDocument

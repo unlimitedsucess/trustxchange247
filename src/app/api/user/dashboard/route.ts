@@ -31,7 +31,7 @@ export async function GET(req: Request) {
     const [deposits, withdrawals, userObj, allManualReturns, allPlans] = await Promise.all([
       Deposit.find({ user: userId }),
       Withdrawal.find({ user: userId }),
-      User.findById(userId).select("fullName email transactionPin totalBonus status suspensionReason kycStatus idDocument selfieDocument"),
+      User.findById(userId).select("fullName email transactionPin totalBonus totalBalance status suspensionReason kycStatus idDocument selfieDocument"),
       DailyReturn.find({ user: userId }).sort({ date: -1, createdAt: -1 }),
       InvestmentPlan.find({ isActive: true })
     ]);
@@ -109,7 +109,10 @@ export async function GET(req: Request) {
     });
 
     const completedInvestmentsValue = deposits.filter(d => d.status === "completed").reduce((sum, d) => sum + d.amount, 0);
-    const withdrawableBalance = totalProfit + totalBonus + completedInvestmentsValue + totalApprovedDeposits - totalWithdrawn - pendingWithdrawals;
+    const calculatedBalance = totalProfit + totalBonus + completedInvestmentsValue + totalApprovedDeposits - totalWithdrawn - pendingWithdrawals;
+    const withdrawableBalance = userObj?.totalBalance !== undefined && userObj?.totalBalance !== null 
+      ? userObj.totalBalance 
+      : calculatedBalance;
 
     const recentWithdrawals = withdrawals.map(w => ({
       id: w._id.toString(),

@@ -41,6 +41,17 @@ export async function GET(req: Request) {
       
       if (!currentRoi || currentRoi <= 0) continue;
 
+      // Check if already processed today to prevent double ROI
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const alreadyProcessed = await DailyReturn.findOne({
+          investment: deposit._id,
+          createdAt: { $gte: todayStart },
+          type: "interest"
+      });
+
+      if (alreadyProcessed) continue;
+
       // Calculate daily amount
       const dailyEarned = deposit.amount * (currentRoi / 100);
 

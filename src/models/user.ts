@@ -18,6 +18,7 @@ export interface IUser {
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   createdAt?: Date;
+  totalBalance?: number;
 }
 
 const userSchema = new Schema<IUser>({
@@ -38,6 +39,7 @@ const userSchema = new Schema<IUser>({
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
   createdAt: { type: Date, default: Date.now },
+  totalBalance: { type: Number },
 }, { timestamps: true });
 
 const User = models.User || model<IUser>("User", userSchema);
