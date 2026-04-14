@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
-import { CheckCircle, XCircle, Trash2, Loader2, Info } from "lucide-react"
+import { CheckCircle, XCircle, Trash2, Loader2, Info, PauseCircle, PlayCircle } from "lucide-react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
 import {
@@ -30,7 +30,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 export function DepositsTable() {
   const [deposits, setDeposits] = useState<any[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [confirmingAction, setConfirmingAction] = useState<"approve" | "reject" | "delete" | null>(null)
+  const [confirmingAction, setConfirmingAction] = useState<"approve" | "reject" | "delete" | "pause" | "play" | null>(null)
   const [loading, setLoading] = useState(true)
   const [isActionLoading, setIsActionLoading] = useState(false)
   const { toast } = useToast()
@@ -52,7 +52,7 @@ export function DepositsTable() {
             plan: d.plan || "N/A",
             paymentMethod: d.paymentMethod || "Crypto",
             date: new Date(d.createdAt).toLocaleDateString(),
-            status: d.status === "active" ? "Approved" : d.status === "rejected" ? "Rejected" : d.status === "completed" ? "Completed" : "Pending"
+            status: d.status === "active" ? "Approved" : d.status === "rejected" ? "Rejected" : d.status === "completed" ? "Completed" : d.status === "paused" ? "Paused" : "Pending"
           }))
           setDeposits(mapped)
         }
@@ -107,6 +107,28 @@ export function DepositsTable() {
     }
   }
 
+  const handleTogglePause = async (id: string, action: "pause" | "play") => {
+    setIsActionLoading(true)
+    const newStatus = action === "pause" ? "paused" : "active";
+    try {
+      const res = await fetch(`/api/admin/deposits/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: newStatus })
+      })
+      if (res.ok) {
+        setDeposits(deposits.map((d) => (d.id === id ? { ...d, status: newStatus === "paused" ? "Paused" : "Approved" } : d)))
+        toast({ title: "Success", description: `Deposit ${newStatus === "paused" ? "paused" : "resumed"} successfully.` })
+        setEditingId(null)
+        setConfirmingAction(null)
+      }
+    } catch (err) {
+      toast({ title: "Error", description: `Failed to ${action} deposit`, variant: "destructive" })
+    } finally {
+      setIsActionLoading(false)
+    }
+  }
+
   const handleDelete = async (id: string) => {
     setIsActionLoading(true)
     try {
@@ -131,6 +153,7 @@ export function DepositsTable() {
     switch (status) {
       case "Approved": return "bg-success text-success-foreground"
       case "Rejected": return "bg-destructive text-destructive-foreground"
+      case "Paused": return "bg-secondary text-secondary-foreground"
       default: return "bg-warning text-warning-foreground"
     }
   }
@@ -200,6 +223,30 @@ export function DepositsTable() {
                                 <XCircle className="h-4 w-4 text-destructive" />
                               </Button>
                             </>
+                          ) : deposit.status === "Approved" ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setEditingId(deposit.id)
+                                setConfirmingAction("pause")
+                              }}
+                              className="h-8 w-8 p-0"
+                            >
+                              <PauseCircle className="h-4 w-4 text-warning" />
+                            </Button>
+                          ) : deposit.status === "Paused" ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setEditingId(deposit.id)
+                                setConfirmingAction("play")
+                              }}
+                              className="h-8 w-8 p-0"
+                            >
+                              <PlayCircle className="h-4 w-4 text-success" />
+                            </Button>
                           ) : (
                             <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-tighter opacity-50">Locked</span>
                           )}
@@ -254,17 +301,21 @@ export function DepositsTable() {
         </DialogContent>
       </Dialog>
 
-      {/* Reject/Delete Confirmation */}
-      <AlertDialog open={editingId !== null && (confirmingAction === "reject" || confirmingAction === "delete")} onOpenChange={(open) => !open && setEditingId(null)}>
+      {/* Reject/Delete/Pause/Play Confirmation */}
+      <AlertDialog open={editingId !== null && (confirmingAction === "reject" || confirmingAction === "delete" || confirmingAction === "pause" || confirmingAction === "play")} onOpenChange={(open) => !open && setEditingId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirmingAction === "reject" ? "Reject Deposit?" : "Delete Deposit?"}
+              {confirmingAction === "reject" ? "Reject Deposit?" : confirmingAction === "delete" ? "Delete Deposit?" : confirmingAction === "pause" ? "Pause Deposit ROI?" : "Resume Deposit ROI?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmingAction === "reject"
                 ? "This deposit request will be rejected and the user will no longer see it as pending."
-                : "This deposit will be permanently deleted from the database. This action cannot be undone."}
+                : confirmingAction === "delete"
+                ? "This deposit will be permanently deleted from the database. This action cannot be undone."
+                : confirmingAction === "pause"
+                ? "This investment will be paused and the user will no longer receive daily ROI until resumed."
+                : "This investment will be resumed and the user will start receiving daily ROI again."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
@@ -272,15 +323,17 @@ export function DepositsTable() {
                 <Button variant="outline" disabled={isActionLoading}>Cancel</Button>
             </AlertDialogCancel>
             <Button 
-                variant="destructive"
+                variant={confirmingAction === "delete" || confirmingAction === "reject" ? "destructive" : "default"}
                 disabled={isActionLoading}
                 className="min-w-[100px] font-bold"
                 onClick={() => {
                     if (editingId && confirmingAction === "reject") handleReject(editingId)
                     if (editingId && confirmingAction === "delete") handleDelete(editingId)
+                    if (editingId && confirmingAction === "pause") handleTogglePause(editingId, "pause")
+                    if (editingId && confirmingAction === "play") handleTogglePause(editingId, "play")
                 }}
             >
-                {isActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : confirmingAction === "reject" ? "Reject" : "Delete"}
+                {isActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : confirmingAction === "reject" ? "Reject" : confirmingAction === "delete" ? "Delete" : confirmingAction === "pause" ? "Pause" : "Resume"}
             </Button>
           </DialogFooter>
         </AlertDialogContent>
