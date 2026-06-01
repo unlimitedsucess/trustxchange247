@@ -10,7 +10,7 @@ const ALLOWED_ORIGINS = [
   "https://www.trusxchange.com",
 ];
 
-function getCorsHeaders(origin: string | null): Record<string, string> {
+function getCorsHeaders(origin: string | null): HeadersInit | undefined {
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
     return {
       "Access-Control-Allow-Origin": origin,
@@ -19,9 +19,7 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
       "Access-Control-Allow-Credentials": "true",
     };
   }
-
-  // ✅ must be an empty object, not undefined values
-  return {};
+  return undefined;
 }
 
 /* ============================

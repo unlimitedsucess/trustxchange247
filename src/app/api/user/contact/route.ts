@@ -58,9 +58,9 @@ export async function POST(req: Request) {
 
     // Route payload explicitly through Unified ZeptoMail Transporter
       await sendEmail({
-      from: `"TrustXchange247 Contact" <support@trusxchange.com>`,
+
       replyTo: `"${name}" <${email}>`,
-      to: process.env.ADMIN_EMAIL,
+      to: process.env.ADMIN_EMAIL ?? "support@trusxchange.com",
       subject: `[Contact Form] ${subject}`,
       text: `Name: ${name}
 Email: ${email}
