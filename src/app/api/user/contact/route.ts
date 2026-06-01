@@ -9,7 +9,7 @@ const ALLOWED_ORIGINS = [
   "https://www.trusxchange.com",
 ];
 
-function getCorsHeaders(origin: string | null) {
+function getCorsHeaders(origin: string | null): HeadersInit | undefined {
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
     return {
       "Access-Control-Allow-Origin": origin,
@@ -18,7 +18,7 @@ function getCorsHeaders(origin: string | null) {
       "Access-Control-Allow-Credentials": "true",
     };
   }
-  return {};
+  return undefined;
 }
 
 export async function OPTIONS(req: Request) {
@@ -56,11 +56,11 @@ export async function POST(req: Request) {
       message: message.trim(),
     });
 
-    // Route payload explicitly through Unified Resend Sender
-    await sendEmail({
+    // Route payload explicitly through Unified ZeptoMail Transporter
+      await sendEmail({
       from: `"TrustXchange247 Contact" <support@trusxchange.com>`,
       replyTo: `"${name}" <${email}>`,
-      to: process.env.ADMIN_EMAIL || "support@trusxchange.com",
+      to: process.env.ADMIN_EMAIL,
       subject: `[Contact Form] ${subject}`,
       text: `Name: ${name}
 Email: ${email}

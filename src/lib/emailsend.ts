@@ -4,7 +4,7 @@ import { Resend } from "resend";
 export const resend = new Resend(process.env.RESEND_API_KEY);
 
 interface SendEmailParams {
-  to: string;
+  to?: string;
   subject: string;
   html: string;
   from?: string;
@@ -22,7 +22,7 @@ export const sendEmail = async ({
 }: SendEmailParams) => {
   return await resend.emails.send({
     from: from || process.env.ADMIN_EMAIL || "support@trusxchange.com",
-    to,
+    to: to || process.env.ADMIN_EMAIL || "support@trusxchange.com",
     subject,
     html,
     text,
