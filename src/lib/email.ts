@@ -1,18 +1,7 @@
-import nodemailer from "nodemailer";
-
-export const transporter = nodemailer.createTransport({
-  host: "smtp.zeptomail.com",
-  port: 587,
-  secure: false, // TLS
-  auth: {
-    user: process.env.ZEPTOMAIL_USER || "email", // Use "email", "emailapikey" or your specific Zeptomail username
-    pass: process.env.ZEPTOMAIL_PASS,
-  },
-});
+import { sendEmail } from "@/lib/emailsend";
 
 export const sendVerificationEmail = async (email: string, code: string) => {
-  await transporter.sendMail({
-    from: `"Trust Xchange" <${process.env.ADMIN_EMAIL || 'support@trusxchange.com'}>`,
+  await sendEmail({
     to: email,
     subject: "Your Verification Code - TrustXchange247",
     html: `
@@ -70,9 +59,12 @@ export const sendVerificationEmail = async (email: string, code: string) => {
   });
 };
 
-export const sendDepositApprovalEmail = async (email: string, amount: number, planName: string) => {
-  await transporter.sendMail({
-    from: `"Trust Xchange" <${process.env.ADMIN_EMAIL || 'support@trusxchange.com'}>`,
+export const sendDepositApprovalEmail = async (
+  email: string,
+  amount: number,
+  planName: string,
+) => {
+  await sendEmail({
     to: email,
     subject: "Deposit Approved - TrustXchange247",
     html: `
@@ -141,9 +133,12 @@ export const sendDepositApprovalEmail = async (email: string, amount: number, pl
   });
 };
 
-export const sendWithdrawalApprovalEmail = async (email: string, amount: number, wallet: string) => {
-  await transporter.sendMail({
-    from: `"Trust Xchange" <${process.env.ADMIN_EMAIL || 'support@trusxchange.com'}>`,
+export const sendWithdrawalApprovalEmail = async (
+  email: string,
+  amount: number,
+  wallet: string,
+) => {
+  await sendEmail({
     to: email,
     subject: "Withdrawal Approved & Sent - TrustXchange247",
     html: `
@@ -212,8 +207,7 @@ export const sendWithdrawalApprovalEmail = async (email: string, amount: number,
   });
 };
 export const sendBonusEmail = async (email: string, amount: number) => {
-  await transporter.sendMail({
-    from: `"Trust Xchange" <${process.env.ADMIN_EMAIL || 'support@trusxchange.com'}>`,
+  await sendEmail({
     to: email,
     subject: "Bonus Credited - TrustXchange247",
     html: `
@@ -269,9 +263,12 @@ export const sendBonusEmail = async (email: string, amount: number) => {
     `,
   });
 };
-export const sendDailyReturnEmail = async (email: string, amount: number, day: string) => {
-  await transporter.sendMail({
-    from: `"Trust Xchange" <${process.env.ADMIN_EMAIL || 'support@trusxchange.com'}>`,
+export const sendDailyReturnEmail = async (
+  email: string,
+  amount: number,
+  day: string,
+) => {
+  await sendEmail({
     to: email,
     subject: `Daily Return Processed - ${day} - TrustXchange247`,
     html: `
@@ -337,8 +334,7 @@ export const sendDailyReturnEmail = async (email: string, amount: number, day: s
   });
 };
 export const sendSuspensionEmail = async (email: string, reason: string) => {
-  await transporter.sendMail({
-    from: `"Trust Xchange Safety" <${process.env.ADMIN_EMAIL || 'support@trusxchange.com'}>`,
+  await sendEmail({
     to: email,
     subject: "Urgent: Account Suspension Notice - TrustXchange247",
     html: `
@@ -400,9 +396,11 @@ export const sendSuspensionEmail = async (email: string, reason: string) => {
   });
 };
 
-export const sendPasswordResetEmail = async (email: string, resetLink: string) => {
-  await transporter.sendMail({
-    from: `"Trust Xchange Security" <${process.env.ADMIN_EMAIL || 'support@trusxchange.com'}>`,
+export const sendPasswordResetEmail = async (
+  email: string,
+  resetLink: string,
+) => {
+  await sendEmail({
     to: email,
     subject: "Password Reset Request - TrustXchange247",
     html: `

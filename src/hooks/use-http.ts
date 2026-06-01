@@ -60,6 +60,7 @@ export const useHttp = () => {
 
         successRes(res.data);
       } catch (error: any) {
+        
         let errorMessage = "Something went wrong. Please try again.";
 
         if (error.code === "ERR_NETWORK") {

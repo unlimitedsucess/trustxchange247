@@ -98,7 +98,7 @@ export function LoginForm() {
 
       {submitted && (
         <div className="mb-6 p-4 bg-accent/10 border border-accent rounded-lg flex items-start gap-3">
-          <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+          <CheckCircle className="h-5 w-5 text-accent shrink-0 mt-0.5" />
           <div>
             <p className="font-semibold text-sm">Login successful!</p>
             <p className="text-sm text-muted-foreground">
