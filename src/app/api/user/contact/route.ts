@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Contact from "@/models/Contact";
-import { transporter } from "@/lib/email";
+import { sendEmail } from "@/lib/emailsend";
 
 const ALLOWED_ORIGINS = [
   "http://localhost:3000",
@@ -56,11 +56,11 @@ export async function POST(req: Request) {
       message: message.trim(),
     });
 
-    // Route payload explicitly through Unified ZeptoMail Transporter
-    await transporter.sendMail({
+    // Route payload explicitly through Unified Resend Sender
+    await sendEmail({
       from: `"TrustXchange247 Contact" <support@trusxchange.com>`,
       replyTo: `"${name}" <${email}>`,
-      to: process.env.ADMIN_EMAIL,
+      to: process.env.ADMIN_EMAIL || "support@trusxchange.com",
       subject: `[Contact Form] ${subject}`,
       text: `Name: ${name}
 Email: ${email}
