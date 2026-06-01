@@ -3,7 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 
-type LanguageCode = "en" | "es" | "tr" | "pt" | "ar" | "fr" | "de" | "it" | "ru" | "zh" | "hi" | "ja" | "ko"
+type LanguageCode = string
 
 interface LanguageContextType {
   language: LanguageCode
@@ -13,7 +13,7 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
-const translations: Record<LanguageCode, Record<string, string>> = {
+const translations: Record<string, Record<string, string>> = {
   en: {
     "header.home": "Home",
     "header.about": "About",
