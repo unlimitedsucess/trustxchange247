@@ -6,32 +6,12 @@ import { Button } from "@/components/ui/button"
 import { DarkModeToggle } from "./dark-mode-toggle"
 import { LanguageSelector } from "./language-selector"
 import { useLanguage } from "@/lib/language-context"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { t: translate } = useLanguage()
   const t: (key: string) => string = translate || ((key: string) => key)
-
-  useEffect(() => {
-    const script = document.createElement("script")
-    script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
-    script.async = true
-    document.body.appendChild(script)
-
-    window.googleTranslateElementInit = () => {
-      ;new (window as any).google.translate.TranslateElement(
-        { pageLanguage: "en", includedLanguages: "ar,de,en,es,fr,hi,it,ja,ko,pt,ru,tr,zh-CN" },
-        "google_translate_element",
-      )
-    }
-
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script)
-      }
-    }
-  }, [])
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur">
@@ -39,7 +19,7 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-br from-primary to-accent shadow-sm">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-linear-to-br from-primary to-accent shadow-sm">
               <ShieldCheck className="h-5 w-5 text-white" />
             </div>
             <span className="font-bold text-lg hidden sm:inline tracking-tight">Trust<span className="text-primary">X</span>change247</span>
@@ -63,9 +43,6 @@ export function Header() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
-            {/* Google Translate */}
-            <div id="google_translate_element" className="hidden sm:block "></div>
-
             {/* Language Selector */}
             <div className="flex">
               <LanguageSelector />

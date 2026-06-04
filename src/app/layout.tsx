@@ -45,6 +45,8 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const shouldLoadTawk = process.env.NODE_ENV === "production"
+
   return (
     <html lang="en">
       <body className="font-sans antialiased">
@@ -54,23 +56,25 @@ export default function RootLayout({
         <Analytics />
         
         {/* Tawk.to Live Chat Script */}
-        <Script 
-          id="tawk-to" 
-          strategy="lazyOnload"
-          dangerouslySetInnerHTML={{
-            __html: `
-              var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-              (function(){
-              var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-              s1.async=true;
-              s1.src='https://embed.tawk.to/69cb0523ecf7021c36680aa1/1jl0go4m3';
-              s1.charset='UTF-8';
-              s1.setAttribute('crossorigin','*');
-              s0.parentNode.insertBefore(s1,s0);
-              })();
-            `
-          }}
-        />
+        {shouldLoadTawk && (
+          <Script 
+            id="tawk-to" 
+            strategy="lazyOnload"
+            dangerouslySetInnerHTML={{
+              __html: `
+                var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+                (function(){
+                var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+                s1.async=true;
+                s1.src='https://embed.tawk.to/69cb0523ecf7021c36680aa1/1jl0go4m3';
+                s1.charset='UTF-8';
+                s1.setAttribute('crossorigin','*');
+                s0.parentNode.insertBefore(s1,s0);
+                })();
+              `
+            }}
+          />
+        )}
       </body>
     </html>
   )
