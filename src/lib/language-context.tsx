@@ -3,10 +3,14 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 
+import { LANGUAGES, type LanguageItem, getLanguageByCode, applyGoogleTranslation } from "./languages"
+
 type LanguageCode = string
 
 interface LanguageContextType {
   language: LanguageCode
+  currentLanguage: LanguageItem
+  languages: LanguageItem[]
   setLanguage: (lang: LanguageCode) => void
   t: (key: string) => string
 }
@@ -516,30 +520,53 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<LanguageCode>("en")
 
   useEffect(() => {
-    const savedLanguage = localStorage.getItem("language") as LanguageCode | null
-    if (savedLanguage && translations[savedLanguage]) {
-      setLanguageState(savedLanguage)
+    // 1. Check googtrans cookie first
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`
+      const parts = value.split(`; ${name}=`)
+      if (parts.length === 2) return parts.pop()?.split(";").shift()
+      return null
+    }
+
+    const googtransCookie = getCookie("googtrans")
+    let detectedLang: string | null = null
+
+    if (googtransCookie) {
+      // format is e.g. /en/es or /auto/es
+      const segments = googtransCookie.split("/")
+      if (segments.length > 0) {
+        const lastSegment = segments[segments.length - 1]
+        if (lastSegment && lastSegment !== "en" && lastSegment !== "auto") {
+          detectedLang = lastSegment
+        }
+      }
+    }
+
+    if (!detectedLang) {
+      detectedLang = localStorage.getItem("language")
+    }
+
+    if (detectedLang) {
+      setLanguageState(detectedLang)
     }
   }, [])
 
   const setLanguage = (lang: LanguageCode) => {
     setLanguageState(lang)
-    localStorage.setItem("language", lang)
-    
-    // Wire Custom UI Dropdown directly to Global Google Translate Engine
-    const host = window.location.hostname
-    document.cookie = `googtrans=/en/${lang}; path=/; domain=${host}`
-    document.cookie = `googtrans=/en/${lang}; path=/`
-    
-    // Force a semantic reload to apply deep-DOM language processing globally
-    window.location.reload()
+    applyGoogleTranslation(lang)
   }
+
+  const currentLanguage = getLanguageByCode(language)
 
   const t = (key: string): string => {
     return translations[language]?.[key] ?? key
   }
 
-  return <LanguageContext.Provider value={{ language, setLanguage, t }}>{children}</LanguageContext.Provider>
+  return (
+    <LanguageContext.Provider value={{ language, currentLanguage, languages: LANGUAGES, setLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  )
 }
 
 export function useLanguage() {

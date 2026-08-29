@@ -136,28 +136,55 @@
     @apply bg-background text-foreground;
   }
 
-  /* Hide Google Translate attribution text */
+  /* Google Translate styles clean-up */
   .goog-logo-link {
     display: none !important;
   }
 
-  /* Remove "Powered by Google Translate" text */
   .goog-te-gadget {
-  
     font-size: 0 !important;
   }
-  .goog-logo-link,
-.goog-te-gadget span{
-  display: none !important;
-}
 
-  /* Remove top Google translate banner */
+  .goog-logo-link,
+  .goog-te-gadget span {
+    display: none !important;
+  }
+
   .goog-te-banner-frame {
     display: none !important;
   }
 
-  /* Prevent body from being pushed down */
   body {
     top: 0 !important;
+    position: static !important;
   }
+
+  .skiptranslate > iframe {
+    display: none !important;
+  }
+
+  #goog-gt-tt,
+  .goog-te-balloon-frame {
+    display: none !important;
+  }
+
+  .goog-text-highlight {
+    background: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Custom scrollbar for dropdown menus */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.3);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 150, 0.5);
 }

@@ -9,33 +9,37 @@ import { Footer } from "@/components/layout/footer"
 import { Toaster } from "sonner"
 
 
+import { DraggableTranslator } from "@/components/layout/draggable-translator"
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
   useEffect(() => {
-    const existingScript = document.querySelector('script[src*="translate.google.com/translate_a/element.js"]')
-    if (existingScript) return
-
-    const script = document.createElement("script")
-    script.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
-    script.async = true
-    document.body.appendChild(script)
-
+    // Setup Google Translate Initialization Function
     window.googleTranslateElementInit = () => {
-      ;(window as any).google?.translate?.TranslateElement(
-        {
-          pageLanguage: "en",
-          includedLanguages: "ar,de,en,es,fr,hi,it,ja,ko,pt,ru,tr,zh-CN",
-        },
-        "google_translate_element",
-      )
+      try {
+        if ((window as any).google?.translate?.TranslateElement) {
+          new (window as any).google.translate.TranslateElement(
+            {
+              pageLanguage: "en",
+              autoDisplay: false,
+            },
+            "google_translate_element"
+          )
+        }
+      } catch (err) {
+        console.error("Google Translate initialization error:", err)
+      }
     }
 
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script)
-      }
-      delete (window as any).googleTranslateElementInit
+    const existingScript = document.querySelector('script[src*="translate.google.com/translate_a/element.js"]')
+    if (!existingScript) {
+      const script = document.createElement("script")
+      script.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+      script.async = true
+      document.body.appendChild(script)
+    } else if ((window as any).google?.translate) {
+      window.googleTranslateElementInit()
     }
   }, [])
 
@@ -46,7 +50,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <LanguageProvider>
-      <div id="google_translate_element" className="hidden" aria-hidden="true" />
+      {/* Hidden Offscreen Anchor for Google Translate */}
+      <div
+        id="google_translate_element"
+        style={{
+          position: "fixed",
+          top: "-9999px",
+          left: "-9999px",
+          opacity: 0,
+          pointerEvents: "none",
+          zIndex: -100,
+        }}
+        aria-hidden="true"
+      />
+
+      {/* Floating Draggable Translator available on all pages */}
+      <DraggableTranslator />
+
       {!hideLayout && <Header />}
       <main>{children}</main>
       {!hideLayout && <Footer />}
