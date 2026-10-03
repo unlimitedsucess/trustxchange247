@@ -31,7 +31,7 @@ export async function GET(req: Request) {
     const [deposits, withdrawals, userObj, allManualReturns, allPlans] = await Promise.all([
       Deposit.find({ user: userId }),
       Withdrawal.find({ user: userId }),
-      User.findById(userId).select("fullName email transactionPin totalBonus totalBalance status suspensionReason kycStatus idDocument selfieDocument"),
+      User.findById(userId).select("fullName email transactionPin totalBonus bonusBalance totalBalance status suspensionReason kycStatus idDocument selfieDocument"),
       DailyReturn.find({ user: userId }).sort({ date: -1, createdAt: -1 }),
       InvestmentPlan.find({ isActive: true })
     ]);
@@ -100,6 +100,7 @@ export async function GET(req: Request) {
 
     const totalProfit = globalAutoRoi + manualInterestsTotal; 
     const totalBonus = (userObj?.totalBonus || 0) + totalDepositBonus + manualBonusesTotal;
+    const bonusWalletBalance = userObj?.bonusBalance || 0;
 
     let totalWithdrawn = 0;
     let pendingWithdrawals = 0;
@@ -128,6 +129,7 @@ export async function GET(req: Request) {
         amount: `$${mr.amount.toFixed(2)}`,
         day: mr.day,
         type: mr.type || "interest",
+        source: mr.source || "investment",
         date: new Date(mr.date || mr.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
     }));
 
@@ -135,6 +137,7 @@ export async function GET(req: Request) {
       totalInvested: globalTotalInvested,
       totalProfit,
       totalBonus,
+      bonusWalletBalance,
       totalWithdrawn,
       totalApprovedDeposits,
       totalPendingDeposits,
@@ -148,6 +151,7 @@ export async function GET(req: Request) {
         name: userObj?.fullName || "Investor",
         email: userObj?.email || "...",
         hasTransactionPin: !!userObj?.transactionPin,
+        bonusWalletBalance,
         status: userObj?.status || "active",
         suspensionReason: userObj?.suspensionReason || "",
         kycStatus: userObj?.kycStatus || "unverified"

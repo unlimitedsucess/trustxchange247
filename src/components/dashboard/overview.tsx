@@ -8,6 +8,7 @@ interface DashboardOverviewProps {
   totalInvested?: number
   totalProfit?: number
   totalBonus?: number
+  bonusWalletBalance?: number
   activeInvestments?: number
   withdrawableBalance?: number
   totalWithdrawn?: number
@@ -23,6 +24,7 @@ export function DashboardOverview({
   totalInvested = 0,
   totalProfit = 0,
   totalBonus = 0,
+  bonusWalletBalance = 0,
   activeInvestments = 0,
   withdrawableBalance = 0,
   totalWithdrawn = 0,
@@ -59,6 +61,14 @@ export function DashboardOverview({
         color: "primary",
         id: "bonus"
       },
+    {
+      label: "Bonus Wallet",
+      value: `$${bonusWalletBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      change: "Admin-managed balance",
+      icon: Wallet,
+      color: "primary",
+      id: "bonus-wallet"
+    },
     {
       label: "Active Investments",
       value: activeInvestments.toString(),

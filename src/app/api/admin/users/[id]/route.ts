@@ -4,6 +4,7 @@ import User from "@/models/user";
 import Deposit from "@/models/deposit";
 import Withdrawal from "@/models/withdrawal";
 import DailyReturn from "@/models/dailyReturn";
+import BonusWalletTransaction from "@/models/bonusWalletTransaction";
 import bcrypt from "bcrypt";
 import { sendBonusEmail } from "@/lib/email";
 
@@ -65,7 +66,8 @@ export async function DELETE(req: Request, props: { params: Promise<{ id: string
     await Promise.all([
       Deposit.deleteMany({ user: id }),
       Withdrawal.deleteMany({ user: id }),
-      DailyReturn.deleteMany({ user: id })
+      DailyReturn.deleteMany({ user: id }),
+      BonusWalletTransaction.deleteMany({ user: id })
     ]);
 
     const deletedUser = await User.findByIdAndDelete(id);

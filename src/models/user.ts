@@ -13,6 +13,7 @@ export interface IUser {
   verificationExpires?: Date;
   transactionPin?: string;
   totalBonus: number;
+  bonusBalance: number;
   status: "active" | "suspended";
   suspensionReason?: string;
   resetPasswordToken?: string;
@@ -34,6 +35,7 @@ const userSchema = new Schema<IUser>({
   verificationExpires: { type: Date },
   transactionPin: { type: String },
   totalBonus: { type: Number, default: 0 },
+  bonusBalance: { type: Number, default: 0, min: 0 },
   status: { type: String, enum: ["active", "suspended"], default: "active" },
   suspensionReason: { type: String },
   resetPasswordToken: { type: String },

@@ -12,6 +12,7 @@ import { DepositModal } from "./deposit-modal"
 import { WithdrawalModal } from "./withdrawal-modal"
 import { UserCreateModal } from "./user-create-modal"
 import { UserSuspendModal } from "./user-suspend-modal"
+import { BonusWalletModal } from "./bonus-wallet-modal"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
@@ -27,6 +28,7 @@ export type AdminUser = {
   status: "active" | "suspended";
   transactionPin?: string;
   totalBonus: number;
+  bonusBalance: number;
   kycStatus: string;
   idDocument?: string;
   selfieDocument?: string;
@@ -52,6 +54,7 @@ export function AdminUsersTable() {
   const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false)
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [suspendModalOpen, setSuspendModalOpen] = useState(false)
+  const [bonusWalletModalOpen, setBonusWalletModalOpen] = useState(false)
   
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
@@ -76,6 +79,7 @@ export function AdminUsersTable() {
           status: u.status || "active",
           transactionPin: u.transactionPin || "",
           totalBonus: u.totalBonus || 0,
+          bonusBalance: u.bonusBalance || 0,
           totalBalance: u.totalBalance,
           kycStatus: u.kycStatus || "unverified",
           idDocument: u.idDocument,
@@ -192,6 +196,7 @@ export function AdminUsersTable() {
                         <div className="flex flex-col">
                            <span className="text-sm font-bold text-foreground">{user.name}</span>
                            <span className="text-[11px] text-muted-foreground truncate max-w-[150px]">{user.email}</span>
+                           <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">Bonus wallet: ${user.bonusBalance.toFixed(2)}</span>
                         </div>
                       </td>
                       <td className="px-4 py-4 text-xs font-medium text-muted-foreground">{user.country}</td>
@@ -224,6 +229,9 @@ export function AdminUsersTable() {
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => { setSelectedUser(user); setWithdrawalModalOpen(true); }} className="gap-2">
                                 <Plus size={14} className="text-destructive" /> Create Withdrawal
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => { setSelectedUser(user); setBonusWalletModalOpen(true); }} className="gap-2">
+                                <Plus size={14} className="text-amber-600" /> Manage Bonus Wallet
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               {user.status === "active" ? (
@@ -320,6 +328,12 @@ export function AdminUsersTable() {
             userName={selectedUser.name}
             open={withdrawalModalOpen}
             onOpenChange={setWithdrawalModalOpen}
+          />
+          <BonusWalletModal
+            user={selectedUser}
+            open={bonusWalletModalOpen}
+            onOpenChange={setBonusWalletModalOpen}
+            onSuccess={fetchUsers}
           />
         </>
       )}

@@ -21,6 +21,7 @@ export default function DashboardPage() {
     totalInvested: number;
     totalProfit: number;
     totalBonus: number;
+    bonusWalletBalance: number;
     activeInvestments: number;
     withdrawableBalance: number;
     totalWithdrawn: number;
@@ -35,6 +36,7 @@ export default function DashboardPage() {
     totalInvested: 0,
     totalProfit: 0,
     totalBonus: 0,
+    bonusWalletBalance: 0,
     activeInvestments: 0,
     withdrawableBalance: 0,
     totalWithdrawn: 0,
@@ -124,6 +126,7 @@ export default function DashboardPage() {
             totalInvested={stats.totalInvested}
             totalProfit={stats.totalProfit}
             totalBonus={stats.totalBonus}
+            bonusWalletBalance={stats.bonusWalletBalance}
             activeInvestments={stats.activeInvestments}
             withdrawableBalance={stats.withdrawableBalance}
             totalWithdrawn={stats.totalWithdrawn}
@@ -168,7 +171,7 @@ export default function DashboardPage() {
                                          </td>
                                          <td className="py-3 px-4 text-[10px] font-bold uppercase tracking-widest leading-none">
                                             <span className={dr.type === "bonus" ? "text-accent" : "text-primary"}>
-                                                {dr.type === "bonus" ? "Bonus" : "Growth"}
+                                                {dr.source === "bonus-wallet" ? "Bonus Wallet Return" : dr.type === "bonus" ? "Bonus" : "Growth"}
                                             </span>
                                          </td>
                                          <td className={`py-3 px-4 text-sm text-right font-bold tabular-nums ${dr.type === 'bonus' ? 'text-accent' : 'text-primary'}`}>

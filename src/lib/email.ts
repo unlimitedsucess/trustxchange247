@@ -263,6 +263,29 @@ export const sendBonusEmail = async (email: string, amount: number) => {
     `,
   });
 };
+export const sendBonusWalletEmail = async (
+  email: string,
+  amount: number,
+  balance: number,
+  type: "credit" | "debit",
+  reason?: string,
+) => {
+  const isCredit = type === "credit";
+  await sendEmail({
+    to: email,
+    subject: `Bonus Wallet ${isCredit ? "Credited" : "Adjusted"} - TrustXchange247`,
+    html: `
+      <div style="max-width: 600px; margin: 40px auto; padding: 32px; border: 1px solid #e2e8f0; border-radius: 16px; font-family: Arial, sans-serif; color: #0f172a;">
+        <h1 style="color: #b45309;">Bonus wallet ${isCredit ? "credited" : "adjusted"}</h1>
+        <p>An administrator ${isCredit ? "added funds to" : "deducted funds from"} your bonus wallet.</p>
+        <p><strong>Adjustment:</strong> ${isCredit ? "+" : "-"}$${amount.toFixed(2)}</p>
+        <p><strong>Bonus wallet balance:</strong> $${balance.toFixed(2)}</p>
+        ${reason ? `<p><strong>Note:</strong> ${reason.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]!)}</p>` : ""}
+        <p style="color: #64748b;">Your bonus wallet balance is managed by the platform. Any returns from this balance are entered separately by an administrator.</p>
+      </div>
+    `,
+  });
+};
 export const sendDailyReturnEmail = async (
   email: string,
   amount: number,

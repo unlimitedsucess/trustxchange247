@@ -32,6 +32,7 @@ export function UserCreateModal({ open, onOpenChange, onSuccess }: UserCreateMod
     email: "",
     password: "",
     country: "",
+    bonusBalance: "0",
     createdAt: new Date().toISOString().split('T')[0] // Default to today
   })
 
@@ -52,10 +53,16 @@ export function UserCreateModal({ open, onOpenChange, onSuccess }: UserCreateMod
       const data = await res.json()
 
       if (data.success) {
-        toast({ title: "Success", description: "User created successfully" })
+        toast({
+          title: "Success",
+          description: data.bonusEmailSent === false
+            ? "User created, but the bonus notification email could not be sent."
+            : "User created successfully",
+          variant: data.bonusEmailSent === false ? "destructive" : "default",
+        })
         onSuccess()
         onOpenChange(false)
-        setFormData({ fullName: "", email: "", password: "", country: "", createdAt: new Date().toISOString().split('T')[0] })
+        setFormData({ fullName: "", email: "", password: "", country: "", bonusBalance: "0", createdAt: new Date().toISOString().split('T')[0] })
       } else {
         toast({ title: "Error", description: data.message || "Failed to create user", variant: "destructive" })
       }
@@ -112,6 +119,18 @@ export function UserCreateModal({ open, onOpenChange, onSuccess }: UserCreateMod
               placeholder="e.g. United States"
               value={formData.country}
               onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="bonusBalance">Initial Bonus Wallet Balance ($)</Label>
+            <Input
+              id="bonusBalance"
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.bonusBalance}
+              onChange={(e) => setFormData({ ...formData, bonusBalance: e.target.value })}
               required
             />
           </div>

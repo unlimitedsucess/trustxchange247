@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input"
 
 export function InvestmentsTable() {
   const [investments, setInvestments] = useState<any[]>([])
+  const [bonusWalletUsers, setBonusWalletUsers] = useState<{ id: string; name: string; email: string; bonusBalance: number }[]>([])
   const [loading, setLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -39,6 +40,13 @@ export function InvestmentsTable() {
     type: "interest" as "interest" | "bonus" 
   })
   const [targetUserId, setTargetUserId] = useState<string | null>(null)
+  const [bonusReturn, setBonusReturn] = useState({
+    userId: "",
+    amount: "",
+    day: "",
+    date: new Date().toISOString().split("T")[0],
+  })
+  const [isSavingBonusReturn, setIsSavingBonusReturn] = useState(false)
   const { toast } = useToast()
   
   const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
@@ -73,6 +81,79 @@ export function InvestmentsTable() {
     }
     if (token) fetchInvestments()
   }, [token])
+
+  useEffect(() => {
+    const fetchBonusWalletUsers = async () => {
+      try {
+        const response = await fetch("/api/admin/users", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const data = await response.json()
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Could not load bonus wallet users")
+        }
+        setBonusWalletUsers(data.data
+          .filter((user: any) => Number(user.bonusBalance) > 0)
+          .map((user: any) => ({
+            id: user._id,
+            name: user.fullName || user.email,
+            email: user.email,
+            bonusBalance: Number(user.bonusBalance),
+          })))
+      } catch (error) {
+        console.error("Failed to fetch bonus wallet users", error)
+        toast({
+          title: "Could not load bonus wallet users",
+          description: error instanceof Error ? error.message : "Please try again.",
+          variant: "destructive",
+        })
+      }
+    }
+
+    if (token) fetchBonusWalletUsers()
+  }, [token, toast])
+
+  const handleBonusReturnSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const amount = Number(bonusReturn.amount)
+    if (!bonusReturn.userId || !Number.isFinite(amount) || amount <= 0 || !bonusReturn.day.trim()) {
+      toast({ title: "Check return details", description: "Choose a user and enter a positive amount and label.", variant: "destructive" })
+      return
+    }
+
+    setIsSavingBonusReturn(true)
+    try {
+      const response = await fetch("/api/admin/daily-returns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          userId: bonusReturn.userId,
+          returns: [{
+            amount,
+            day: bonusReturn.day.trim(),
+            date: bonusReturn.date,
+            type: "bonus",
+            source: "bonus-wallet",
+          }],
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Could not record bonus wallet return")
+      }
+
+      toast({ title: "Bonus return recorded", description: "The return was added to the user's earnings and history." })
+      setBonusReturn((current) => ({ ...current, amount: "", day: "" }))
+    } catch (error) {
+      toast({
+        title: "Could not record return",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingBonusReturn(false)
+    }
+  }
 
   const getCalculatedAmount = () => {
     const val = Number(returnInput.value) || 0;
@@ -174,6 +255,76 @@ export function InvestmentsTable() {
 
   return (
     <>
+      <Card className="mb-6 border-border bg-card">
+        <CardHeader>
+          <CardTitle>Manual Bonus Wallet Returns</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Record each user’s bonus-wallet return manually. One return can be recorded per user per date.
+          </p>
+        </CardHeader>
+        <CardContent>
+          {bonusWalletUsers.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No users currently have a funded bonus wallet.</p>
+          ) : (
+            <form onSubmit={handleBonusReturnSubmit} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="space-y-2 lg:col-span-2">
+                <Label htmlFor="bonus-return-user">User</Label>
+                <Select value={bonusReturn.userId} onValueChange={(userId) => setBonusReturn((current) => ({ ...current, userId }))} disabled={isSavingBonusReturn}>
+                  <SelectTrigger id="bonus-return-user"><SelectValue placeholder="Select a bonus wallet user" /></SelectTrigger>
+                  <SelectContent>
+                    {bonusWalletUsers.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.name} — ${user.bonusBalance.toFixed(2)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bonus-return-amount">Return amount ($)</Label>
+                <Input
+                  id="bonus-return-amount"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={bonusReturn.amount}
+                  onChange={(event) => setBonusReturn((current) => ({ ...current, amount: event.target.value }))}
+                  required
+                  disabled={isSavingBonusReturn}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bonus-return-label">Return label</Label>
+                <Input
+                  id="bonus-return-label"
+                  value={bonusReturn.day}
+                  onChange={(event) => setBonusReturn((current) => ({ ...current, day: event.target.value }))}
+                  placeholder="e.g. October 4 return"
+                  required
+                  disabled={isSavingBonusReturn}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bonus-return-date">Return date</Label>
+                <Input
+                  id="bonus-return-date"
+                  type="date"
+                  value={bonusReturn.date}
+                  onChange={(event) => setBonusReturn((current) => ({ ...current, date: event.target.value }))}
+                  required
+                  disabled={isSavingBonusReturn}
+                />
+              </div>
+              <div className="sm:col-span-2 lg:col-span-5">
+                <Button type="submit" disabled={isSavingBonusReturn}>
+                  {isSavingBonusReturn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Record Daily Return
+                </Button>
+              </div>
+            </form>
+          )}
+        </CardContent>
+      </Card>
       <Card className="border-border bg-card">
         <CardHeader>
           <CardTitle>User Investments</CardTitle>
