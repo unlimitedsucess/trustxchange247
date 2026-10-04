@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { DashboardSidebar } from "@/components/dashboard/sidebar"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,6 +15,7 @@ import { motion } from "framer-motion"
 export default function SecurityPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [mustResetPassword, setMustResetPassword] = useState(false)
   
   const [passwordData, setPasswordData] = useState({ current: "", new: "", confirm: "" })
   const [pinData, setPinData] = useState({ newPin: "", confirmPin: "" })
@@ -27,6 +28,25 @@ export default function SecurityPage() {
 
   const token = useSelector((state: RootState) => state.token.token)
   const { toast } = useToast()
+
+  useEffect(() => {
+    const checkPasswordRequirement = async () => {
+      if (!token) return
+      try {
+        const response = await fetch("/api/user/dashboard", {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        })
+        const data = await response.json()
+        if (response.ok && data.success) {
+          setMustResetPassword(Boolean(data.data.user?.mustResetPassword))
+        }
+      } catch (error) {
+        console.error("Could not check password reset requirement:", error)
+      }
+    }
+    void checkPasswordRequirement()
+  }, [token])
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,6 +62,8 @@ export default function SecurityPage() {
       })
       const data = await res.json()
       if (res.ok) {
+        setMustResetPassword(false)
+        window.dispatchEvent(new Event("password-updated"))
         toast({ title: "Success", description: "Password updated successfully" })
         setPasswordData({ current: "", new: "", confirm: "" })
       } else {
@@ -105,7 +127,14 @@ export default function SecurityPage() {
                 <p className="text-muted-foreground mt-2">Manage your authentication methods and transaction safety.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
+            {mustResetPassword && (
+                <Card className="border-amber-500/30 bg-amber-500/10 p-5">
+                    <h2 className="font-bold text-amber-800 dark:text-amber-300">Change your temporary password</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">For your account’s safety, create a new password before using the rest of your dashboard.</p>
+                </Card>
+            )}
+
+            <div className={`grid grid-cols-1 gap-8 mt-12 ${mustResetPassword ? "" : "lg:grid-cols-2"}`}>
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
                     <Card className="p-8 border-primary/10 bg-card/50 backdrop-blur-sm shadow-xl h-full flex flex-col">
                         <div className="flex items-center gap-3 mb-8">
@@ -116,7 +145,9 @@ export default function SecurityPage() {
                         </div>
                         <form onSubmit={handleUpdatePassword} className="space-y-4 flex-1">
                             <div className="space-y-1.5">
-                                <Label className="text-xs uppercase font-bold text-muted-foreground">Current Password</Label>
+                                <Label className="text-xs uppercase font-bold text-muted-foreground">
+                                    {mustResetPassword ? "Temporary Password" : "Current Password"}
+                                </Label>
                                 <div className="relative">
                                     <Input 
                                         type={showCurrent ? "text" : "password"} 
@@ -136,6 +167,7 @@ export default function SecurityPage() {
                                     <Input 
                                         type={showNew ? "text" : "password"} 
                                         className="bg-background/30 pr-10" 
+                                        minLength={8}
                                         value={passwordData.new} 
                                         onChange={(e) => setPasswordData({...passwordData, new: e.target.value})}
                                         required
@@ -169,7 +201,7 @@ export default function SecurityPage() {
                     </Card>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
+                {!mustResetPassword && <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
                     <Card className="p-8 border-primary/10 bg-card/50 backdrop-blur-sm shadow-xl h-full flex flex-col">
                         <div className="flex items-center gap-3 mb-8">
                             <div className="bg-accent/10 p-2 rounded-lg text-accent">
@@ -220,7 +252,7 @@ export default function SecurityPage() {
                             </div>
                         </form>
                     </Card>
-                </motion.div>
+                </motion.div>}
             </div>
         </div>
       </main>

@@ -24,11 +24,15 @@ export async function POST(req: Request) {
       if (!currentPassword || !newPassword) {
         return NextResponse.json({ message: "Old and new password required" }, { status: 400 });
       }
+      if (typeof newPassword !== "string" || newPassword.length < 8) {
+        return NextResponse.json({ message: "New password must be at least 8 characters long" }, { status: 400 });
+      }
       
       const isMatch = await bcrypt.compare(currentPassword, user.password);
       if (!isMatch) return NextResponse.json({ message: "Current password incorrect" }, { status: 400 });
 
       user.password = await bcrypt.hash(newPassword, 10);
+      user.mustResetPassword = false;
       await user.save();
       return NextResponse.json({ success: true, message: "Password updated successfully" });
     }

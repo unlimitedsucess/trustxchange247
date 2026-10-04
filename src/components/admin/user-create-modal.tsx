@@ -54,11 +54,11 @@ export function UserCreateModal({ open, onOpenChange, onSuccess }: UserCreateMod
 
       if (data.success) {
         toast({
-          title: "Success",
-          description: data.bonusEmailSent === false
-            ? "User created, but the bonus notification email could not be sent."
-            : "User created successfully",
-          variant: data.bonusEmailSent === false ? "destructive" : "default",
+          title: data.welcomeEmailSent === false ? "User created; welcome email failed" : "Success",
+          description: data.welcomeEmailSent === false
+            ? "The account was created, but the welcome email could not be sent. Check the email service configuration."
+            : "User created and welcome instructions emailed.",
+          variant: data.welcomeEmailSent === false ? "destructive" : "default",
         })
         onSuccess()
         onOpenChange(false)

@@ -82,6 +82,7 @@ export async function POST(req: Request) {
         userId: user._id,
         email: user.email,
         fullName: user.fullName,
+        mustResetPassword: user.mustResetPassword,
       },
       process.env.JWT_SECRET as string,
       { expiresIn: "7d" }
@@ -93,6 +94,7 @@ export async function POST(req: Request) {
         token,
         userId: user._id,
         fullName: user.fullName,
+        mustResetPassword: user.mustResetPassword,
       },
       { status: 200, headers: getCorsHeaders(origin) }
     );

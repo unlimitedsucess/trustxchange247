@@ -54,6 +54,12 @@ export function WithdrawForm({ onSuccess, availableBalance = 0 }: WithdrawFormPr
     }
   }, [token])
 
+  useEffect(() => {
+    if (kycStatus && window.location.hash === "#kyc-verification") {
+      document.getElementById("kyc-verification")?.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+  }, [kycStatus])
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, setFile: (s: string) => void) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -178,7 +184,7 @@ export function WithdrawForm({ onSuccess, availableBalance = 0 }: WithdrawFormPr
 
   if (kycStatus === "unverified" || kycStatus === "rejected") {
     return (
-      <Card className="p-6 border-border bg-card shadow-xl relative overflow-hidden">
+      <Card id="kyc-verification" className="p-6 border-border bg-card shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
           <ShieldCheck size={120} className="text-primary" />
         </div>

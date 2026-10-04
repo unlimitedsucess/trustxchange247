@@ -1,5 +1,74 @@
 import { sendEmail } from "@/lib/emailsend";
 
+const companyEmailFrame = (content: string, accent = "#b45309") => `
+  <!DOCTYPE html>
+  <html>
+    <body style="margin:0;padding:32px 12px;background:#f1f5f9;font-family:Arial,sans-serif;color:#0f172a;">
+      <div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;">
+        <div style="padding:26px 32px;background:#0f172a;color:#fff;">
+          <div style="font-size:22px;font-weight:700;letter-spacing:-.4px;">Trust<span style="color:#fbbf24;">X</span>change247</div>
+          <div style="margin-top:5px;color:#cbd5e1;font-size:13px;">Digital Asset Management</div>
+        </div>
+        <div style="padding:32px;">${content}</div>
+        <div style="padding:24px 32px;background:#f8fafc;border-top:1px solid #e2e8f0;font-size:13px;line-height:1.8;color:#475569;">
+          <strong style="color:#0f172a;">TrustXchange247</strong><br/>
+          Website: <a href="https://trusxchange.com" style="color:${accent};">trusxchange.com</a><br/>
+          Support: <a href="mailto:support@trusxchange.com" style="color:${accent};">support@trusxchange.com</a><br/>
+          WhatsApp: <a href="https://wa.me/17023197242" style="color:${accent};">+1 (702) 319-7242</a>
+          <div style="margin-top:14px;color:#94a3b8;font-size:11px;">&copy; ${new Date().getFullYear()} TrustXchange247. All rights reserved.</div>
+        </div>
+      </div>
+    </body>
+  </html>
+`;
+
+const escapeHtml = (value: string) =>
+  value.replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[character]!);
+
+export const sendAdminCreatedUserEmail = async (
+  email: string,
+  fullName: string,
+  temporaryPassword: string,
+  bonusBalance: number,
+) => {
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://trusxchange.com").replace(/\/+$/, "");
+  const loginUrl = `${appUrl}/login`;
+  const kycUrl = `${appUrl}/dashboard/withdrawal#kyc-verification`;
+  const safeName = escapeHtml(fullName);
+  const safeEmail = escapeHtml(email);
+  const safePassword = escapeHtml(temporaryPassword);
+
+  await sendEmail({
+    to: email,
+    subject: "Welcome to TrustXchange247 — your account is ready",
+    replyTo: "support@trusxchange.com",
+    html: companyEmailFrame(`
+      <p style="margin:0 0 8px;color:#b45309;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Welcome to TrustXchange247</p>
+      <h1 style="margin:0 0 16px;font-size:26px;line-height:1.25;">Hello ${safeName}, your account is ready</h1>
+      <p style="margin:0 0 22px;color:#475569;line-height:1.7;">An account has been created for you. Sign in with the details below, then change your temporary password in your dashboard before continuing.</p>
+      <div style="margin:0 0 22px;padding:18px 20px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;line-height:1.8;">
+        <div><strong>Email:</strong> ${safeEmail}</div>
+        <div><strong>Temporary password:</strong> <span style="font-family:monospace;">${safePassword}</span></div>
+        <div><strong>Bonus wallet balance:</strong> $${bonusBalance.toFixed(2)}</div>
+      </div>
+      <p style="margin:0 0 22px;color:#9a3412;line-height:1.6;"><strong>Important:</strong> This is a temporary password. Change it immediately after signing in. Do not share it with anyone.</p>
+      <p style="margin:0 0 24px;text-align:center;">
+        <a href="${loginUrl}" style="display:inline-block;padding:13px 24px;border-radius:8px;background:#b45309;color:#fff;text-decoration:none;font-weight:700;">Sign in and change password</a>
+      </p>
+      <h2 style="margin:26px 0 8px;font-size:18px;">Complete your identity verification</h2>
+      <p style="margin:0 0 14px;color:#475569;line-height:1.7;">After changing your password, visit the KYC section in your dashboard and submit a valid government ID and a selfie with your ID.</p>
+      <p style="margin:0 0 10px;"><a href="${kycUrl}" style="color:#b45309;font-weight:700;">Go to identity verification</a></p>
+      <p style="margin:20px 0 0;color:#64748b;font-size:12px;line-height:1.6;">For your security, if you were not expecting this account, contact our support team using the details below.</p>
+    `),
+  });
+};
+
 export const sendVerificationEmail = async (email: string, code: string) => {
   await sendEmail({
     to: email,
@@ -274,16 +343,17 @@ export const sendBonusWalletEmail = async (
   await sendEmail({
     to: email,
     subject: `Bonus Wallet ${isCredit ? "Credited" : "Adjusted"} - TrustXchange247`,
-    html: `
-      <div style="max-width: 600px; margin: 40px auto; padding: 32px; border: 1px solid #e2e8f0; border-radius: 16px; font-family: Arial, sans-serif; color: #0f172a;">
-        <h1 style="color: #b45309;">Bonus wallet ${isCredit ? "credited" : "adjusted"}</h1>
-        <p>An administrator ${isCredit ? "added funds to" : "deducted funds from"} your bonus wallet.</p>
-        <p><strong>Adjustment:</strong> ${isCredit ? "+" : "-"}$${amount.toFixed(2)}</p>
-        <p><strong>Bonus wallet balance:</strong> $${balance.toFixed(2)}</p>
-        ${reason ? `<p><strong>Note:</strong> ${reason.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]!)}</p>` : ""}
-        <p style="color: #64748b;">Your bonus wallet balance is managed by the platform. Any returns from this balance are entered separately by an administrator.</p>
+    replyTo: "support@trusxchange.com",
+    html: companyEmailFrame(`
+      <h1 style="margin:0 0 16px;color:#b45309;">Bonus wallet ${isCredit ? "credited" : "adjusted"}</h1>
+      <p style="color:#475569;line-height:1.7;">An administrator ${isCredit ? "added funds to" : "deducted funds from"} your bonus wallet.</p>
+      <div style="margin:20px 0;padding:18px 20px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;line-height:1.8;">
+        <div><strong>Adjustment:</strong> ${isCredit ? "+" : "-"}$${amount.toFixed(2)}</div>
+        <div><strong>Bonus wallet balance:</strong> $${balance.toFixed(2)}</div>
+        ${reason ? `<div><strong>Note:</strong> ${escapeHtml(reason)}</div>` : ""}
       </div>
-    `,
+      <p style="color:#64748b;line-height:1.7;">Your bonus wallet balance is managed by the platform. Any returns from this balance are entered separately by an administrator.</p>
+    `),
   });
 };
 export const sendDailyReturnEmail = async (

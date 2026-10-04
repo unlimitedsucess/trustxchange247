@@ -4,7 +4,7 @@ import User from "@/models/user";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import BonusWalletTransaction from "@/models/bonusWalletTransaction";
-import { sendBonusWalletEmail } from "@/lib/email";
+import { sendAdminCreatedUserEmail } from "@/lib/email";
 
 export async function GET(req: Request) {
   try {
@@ -49,6 +49,7 @@ export async function POST(req: Request) {
           password: hashedPassword,
           country,
           bonusBalance: initialBonus,
+          mustResetPassword: true,
           isEmailVerified: true,
           createdAt: createdAt ? new Date(createdAt) : new Date(),
           status: "active"
@@ -73,19 +74,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "User creation failed" }, { status: 500 });
     }
 
-    let bonusEmailSent = true;
-    if (initialBonus > 0) {
-      try {
-        await sendBonusWalletEmail(newUser.email, initialBonus, initialBonus, "credit", "Initial bonus wallet funding");
-      } catch (emailError) {
-        bonusEmailSent = false;
-        console.error("Failed to send initial bonus wallet email:", emailError);
-      }
+    let welcomeEmailSent = true;
+    try {
+      await sendAdminCreatedUserEmail(newUser.email, fullName, password, initialBonus);
+    } catch (emailError) {
+      welcomeEmailSent = false;
+      console.error("Failed to send admin-created user welcome email:", emailError);
     }
 
     const userToReturn = newUser.toObject();
     delete userToReturn.password;
-    return NextResponse.json({ success: true, data: userToReturn, bonusEmailSent }, { status: 201 });
+    return NextResponse.json({ success: true, data: userToReturn, welcomeEmailSent }, { status: 201 });
   } catch (error: any) {
     if (error?.code === 11000) {
       return NextResponse.json({ success: false, message: "User already exists" }, { status: 400 });

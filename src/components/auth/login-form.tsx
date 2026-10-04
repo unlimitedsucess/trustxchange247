@@ -79,7 +79,7 @@ export function LoginForm() {
           console.log("loging", res);
 
           dispatch(tokenActions.setToken(token));
-          router.push("/dashboard");
+          router.push(res.mustResetPassword ? "/dashboard/security?reset=required" : "/dashboard");
         },
       });
     } else {
