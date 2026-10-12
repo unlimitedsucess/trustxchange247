@@ -120,10 +120,10 @@ export default function ContactPage() {
                     <div>
                       <p className="font-semibold mb-1">Office</p>
                       <p className="text-muted-foreground">
-                        123 Finance Street
+                        24 Boulevard Royal
                       </p>
                       <p className="text-muted-foreground">
-                        New York, NY 10001
+                        L-2449 Luxembourg, Luxembourg
                       </p>
                     </div>
                   </div>

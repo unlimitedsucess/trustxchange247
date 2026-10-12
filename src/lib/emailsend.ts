@@ -7,11 +7,13 @@ export const sendEmail = async ({
   subject,
   html,
   replyTo,
+  text,
 }: {
   replyTo?: string;
   to: string;
   subject: string;
   html: string;
+  text?: string;
 }) => {
   try {
     return await resend.emails.send({
@@ -19,6 +21,7 @@ export const sendEmail = async ({
       to,
       subject,
       html,
+      text,
       replyTo, // ✅ correct for TypeScript + Resend SDK
     });
   } catch (error) {

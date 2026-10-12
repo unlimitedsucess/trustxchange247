@@ -83,7 +83,7 @@ export function DraggableTranslator() {
   }, [isOpen])
 
   // Drag Handlers
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLElement>) => {
     // Only drag with primary mouse button or touch
     if (e.button !== 0 && e.pointerType === "mouse") return
     if (!position) return

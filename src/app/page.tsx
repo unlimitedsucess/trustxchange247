@@ -7,6 +7,7 @@ import { HeroSection } from "@/components/home/hero-section"
 import { TradingChart } from "@/components/home/trading-chart"
 import { CryptoMarketTable } from "@/components/home/crypto-market-table"
 import { InvestmentPlans } from "@/components/home/investment-plans"
+import { TopInvestors } from "@/components/home/top-investors"
 
 export default function HomePage() {
   const shouldReduceMotion = useReducedMotion()
@@ -57,6 +58,7 @@ export default function HomePage() {
           </motion.div>
         </section>
         <InvestmentPlans />
+        <TopInvestors />
       </main>
     </div>
   )
