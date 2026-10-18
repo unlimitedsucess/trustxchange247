@@ -49,7 +49,7 @@ export function Footer() {
             <h4 className="font-semibold mb-4 text-sm">Support</h4>
             <ul className="space-y-2 text-sm">
               <li className="text-muted-foreground">Email: support@TrustXchange247.com</li>
-              <li className="text-muted-foreground">Phone: +1 (239) 527-8538</li>
+              {/* <li className="text-muted-foreground">Phone: +1 (239) 527-8538</li> */}
               <li className="text-muted-foreground">Office: 24 Boulevard Royal, L-2449 Luxembourg</li>
             </ul>
           </div>

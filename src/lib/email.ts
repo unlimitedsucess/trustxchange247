@@ -14,7 +14,7 @@ const companyEmailFrame = (content: string, accent = "#b45309") => `
           <strong style="color:#0f172a;">TrustXchange247</strong><br/>
           Website: <a href="https://trusxchange.com" style="color:${accent};">trusxchange.com</a><br/>
           Support: <a href="mailto:support@trusxchange.com" style="color:${accent};">support@trusxchange.com</a><br/>
-          WhatsApp: <a href="https://wa.me/17023197242" style="color:${accent};">+1 (239) 527-8538</a>
+          // WhatsApp: <a href="https://wa.me/17023197242" style="color:${accent};">+1 (239) 527-8538</a>
           <div style="margin-top:14px;color:#94a3b8;font-size:11px;">&copy; ${new Date().getFullYear()} TrustXchange247. All rights reserved.</div>
         </div>
       </div>
