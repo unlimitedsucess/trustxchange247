@@ -58,7 +58,10 @@ export function TopInvestors() {
           }
         })
         const result = await res.json()
+
+        
         if (isMounted && result.success && Array.isArray(result.data)) {
+          console.log("Fetched top investors:", result.data)
           setInvestors(result.data)
         }
       } catch (err) {

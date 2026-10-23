@@ -49,7 +49,7 @@ const faqs = [
     id: "8",
     question: "How can I contact customer support?",
     answer:
-      "You can reach our support team via email at support@TrustXchange247.com, phone at +17023197242, or through the contact form on our Contact Us page. We're available 24/7 to assist you.",
+      "You can reach our support team via email at support@TrustXchange247.com, phone at +4571498700, or through the contact form on our Contact Us page. We're available 24/7 to assist you.",
   },
   {
     id: "9",

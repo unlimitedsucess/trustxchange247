@@ -104,7 +104,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="font-semibold mb-1">Phone</p>
-                      <p className="text-muted-foreground">+17023197242</p>
+                      <p className="text-muted-foreground">+4571498700</p>
                       <p className="text-muted-foreground">
                         Available 9 AM - 6 PM EST
                       </p>
