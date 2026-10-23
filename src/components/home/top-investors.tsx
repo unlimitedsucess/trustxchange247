@@ -227,7 +227,7 @@ export function TopInvestors() {
                           {investor.portfolio}
                         </span>
                       </div>
-                      <div>
+                      {/* <div>
                         <span className="text-[11px] uppercase tracking-wider text-muted-foreground block font-medium">
                           Lifetime ROI
                         </span>
@@ -235,7 +235,7 @@ export function TopInvestors() {
                           <TrendingUp className="w-4 h-4" />
                           {investor.roi}
                         </span>
-                      </div>
+                      </div> */}
                     </div>
 
                     {/* Investor Bio */}

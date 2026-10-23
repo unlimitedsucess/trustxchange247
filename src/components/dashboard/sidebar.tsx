@@ -102,7 +102,7 @@ export function DashboardSidebar({ onClose, user: propUser }: DashboardSidebarPr
 
         {/* WhatsApp Link */}
         <a
-          href="https://wa.me/17023197242"
+          href="https://wa.me/4571498700"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sidebar-foreground hover:bg-[#25D366]/10 group"

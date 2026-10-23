@@ -295,17 +295,13 @@ export async function GET(req: Request) {
       const location = item.user.country?.trim() || "Verified Global Member";
       const totalAmount = item.effectiveAmount;
 
-      // Calculate ROI
+      // ROI is earned interest relative to approved investment principal, not account balance or pending deposits.
       const totalProfit = returnSumMap.get(item.user._id.toString()) || 0;
-      let roiString: string;
-      if (totalProfit > 0 && totalAmount > 0) {
-        const computedRoi = ((totalProfit / totalAmount) * 100).toFixed(1);
-        roiString = `+${computedRoi}%`;
-      } else {
-        // Realistic benchmark baseline based on rank & investment size
-        const baseline = 110 + (topCandidates.length - index) * 14.5;
-        roiString = `+${baseline.toFixed(1)}%`;
-      }
+      const investedPrincipal = item.depData?.activeInvested || 0;
+      const computedRoi = investedPrincipal > 0 ? (totalProfit / investedPrincipal) * 100 : null;
+      const roiString = computedRoi === null
+        ? "N/A"
+        : `${computedRoi > 0 ? "+" : ""}${computedRoi.toFixed(1)}%`;
 
       const planName = item.depData?.plans?.[0];
       const specialty = planName
